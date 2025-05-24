@@ -2,29 +2,35 @@
 #include "ponto_obj.h"
 #include "reta_obj.h"
 #include "poligono_obj.h"
+#include "circunferencia_obj.h"
 #include <QMouseEvent>
 #include <QDebug>
 
 
-FrameDesenho::FrameDesenho(QWidget *parent) // Construtor atualizado
-    : QFrame(parent), // Chama o construtor de QFrame
+FrameDesenho::FrameDesenho(QWidget *parent)
+    : QFrame(parent),
     displayFile(nullptr),
-    janelaMundo(std::make_shared<JanelaMundo>(-250, -250, 250, 250)), // Janela de mundo default
-    viewportTela(std::make_shared<ViewportTela>(0, 0, width(), height())),
+    janelaMundo(std::make_shared<JanelaMundo>(-250, -250, 250, 250)),
+    // ViewportTela será inicializado em atualizarViewport e no construtor após ter width/height
     clipper(std::make_unique<ClipperCohenSutherland>(-1.0, -1.0, 1.0, 1.0))
 {
-    // Configurações iniciais do widget QFrame
     setAutoFillBackground(true);
     QPalette pal = palette();
-    pal.setColor(QPalette::Window, Qt::white); // Fundo branco
+    pal.setColor(QPalette::Window, Qt::white);
     setPalette(pal);
-    setFrameStyle(QFrame::StyledPanel | QFrame::Sunken); // Estilo do frame, pode ser ajustado
+    setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
 
+    // Inicializa viewportTela com padding se as dimensões já estiverem disponíveis
     if (width() > 0 && height() > 0) {
-        viewportTela->definirParametros(0, 0, width(), height());
+        int padding = 10;
+        // Garante que a largura e altura não sejam negativas após o padding
+        int vpWidth = std::max(0, width() - 2 * padding);
+        int vpHeight = std::max(0, height() - 2 * padding);
+        viewportTela = std::make_shared<ViewportTela>(padding, padding, vpWidth, vpHeight);
+    } else {
+        // Caso contrário, inicializa com tamanho zero e será ajustado no primeiro resizeEvent
+        viewportTela = std::make_shared<ViewportTela>(0, 0, 0, 0);
     }
-    // Habilita o rastreamento do mouse se for usar mouseMoveEvent sem botão pressionado
-    // setMouseTracking(true);
 }
 
 FrameDesenho::~FrameDesenho() {}
@@ -48,7 +54,12 @@ std::shared_ptr<JanelaMundo> FrameDesenho::obterJanelaMundo() const {
 
 void FrameDesenho::atualizarViewport() {
     if (viewportTela) {
-        viewportTela->definirParametros(0, 0, width(), height());
+        int padding = 10;
+        // Garante que a largura e altura não sejam negativas
+        int vpWidth = std::max(0, width() - 2 * padding);
+        int vpHeight = std::max(0, height() - 2 * padding);
+
+        viewportTela->definirParametros(padding, padding, vpWidth, vpHeight);
         redesenhar();
     }
 }
@@ -58,26 +69,31 @@ void FrameDesenho::redesenhar() {
 }
 
 void FrameDesenho::paintEvent(QPaintEvent *event) {
-    QFrame::paintEvent(event); // Chama o paintEvent da classe base QFrame, se necessário
+    QFrame::paintEvent(event);
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    if (!displayFile || !janelaMundo || !viewportTela) {
-        painter.drawText(rect(), Qt::AlignCenter, "Componentes não configurados.");
+    if (!displayFile || !janelaMundo || !viewportTela || viewportTela->obterLargura() <= 0 || viewportTela->obterAltura() <= 0) {
+        // Não desenha se a viewport não estiver pronta ou tiver tamanho inválido
+        if (viewportTela && (viewportTela->obterLargura() <= 0 || viewportTela->obterAltura() <= 0)) {
+            painter.drawText(rect(), Qt::AlignCenter, "Viewport com tamanho inválido.");
+        } else {
+            painter.drawText(rect(), Qt::AlignCenter, "Componentes não configurados.");
+        }
         return;
     }
 
     Matriz matViewport = viewportTela->obterMatrizTransformacaoViewport();
-    // Recalcular SCN é importante se a janelaMundo mudou.
-    // Idealmente, isso é feito quando janelaMundo é alterada, não em cada paintEvent.
-    // displayFile->recalcularTodosPontosSCN(janelaMundo->obterMatrizNormalizacao());
 
+    // Desenhar objetos
     for (const auto& objeto : displayFile->obterObjetos()) {
         if (objeto) {
             desenharObjeto(painter, objeto, matViewport);
         }
     }
-    desenharMolduraViewport(painter);
+
+    // Desenhar os detalhes da viewport (borda, label, eixos)
+    desenharDetalhesDaViewport(painter);
 }
 
 void FrameDesenho::resizeEvent(QResizeEvent *event) {
@@ -153,27 +169,156 @@ void FrameDesenho::desenharObjeto(QPainter& painter, std::shared_ptr<ObjetoGrafi
                                  qRound(p2Tela.obterX()), qRound(p2Tela.obterY()));
             }
         }
+    } else if (tipo == TipoObjeto::CIRCUNFERENCIA) {
+        auto circulo = std::dynamic_pointer_cast<CircunferenciaObj>(objeto);
+        if (!circulo) return;
 
-        // Comentado o preenchimento:
-        /*
-    QPolygonF polygonOriginalTela;
-    for (const Ponto2D& p_scn : pontosCorrigidos) {
-        Matriz pTelaMat = matViewport * p_scn;
-        Ponto2D pTela(pTelaMat);
-        polygonOriginalTela << QPointF(pTela.obterX(), pTela.obterY());
-    }
-    painter.setBrush(QBrush(objeto->obterCor(), Qt::SolidPattern));
-    painter.drawPolygon(polygonOriginalTela);
-    */
+        // Usar a cor definida no objeto para a caneta
+        painter.setPen(QPen(circulo->obterCor(), 1)); // Caneta fina para os pontos da circunferência
+
+        Ponto2D centroOriginal = circulo->obterCentroOriginal();
+        double raioOriginal = circulo->obterRaioOriginal();
+
+        // O número de pontos para a aproximação pode vir do objeto CircunferenciaObj
+        // ou ser definido aqui. Usar o mesmo que em gerarPontosAproximacao seria consistente.
+        int numPontosAprox = 72; // Ajuste para mais suavidade vs desempenho
+
+        // Obter a matriz de transformação completa: Objeto -> Mundo -> Normalizado -> Viewport
+        Matriz matObj = circulo->obterMatrizTransformacaoAcumulada();
+        Matriz matNorm = janelaMundo->obterMatrizNormalizacao();
+        // matViewport já está disponível como argumento da função desenharObjeto
+
+        Matriz matTransformacaoOriginalParaSCN = matNorm * matObj;
+        Matriz matTransformacaoOriginalParaTela = matViewport * matNorm * matObj;
+
+        for (int i = 0; i < numPontosAprox; ++i) {
+            double angulo = 2.0 * M_PI * static_cast<double>(i) / static_cast<double>(numPontosAprox);
+
+            // 1. Gerar um ponto na circunferência original (coordenadas do mundo, relativas ao objeto)
+            Ponto2D pontoNaCircOriginal(
+                centroOriginal.obterX() + raioOriginal * std::cos(angulo),
+                centroOriginal.obterY() + raioOriginal * std::sin(angulo)
+                // W=1 por padrão em Ponto2D
+                );
+
+            // 2. Transformar este ponto para Coordenadas Normalizadas de Dispositivo (SCN) para clipping
+            Ponto2D p_scn_temp(matTransformacaoOriginalParaSCN * pontoNaCircOriginal);
+            p_scn_temp.normalizar(); // Garante w=1, se não for ponto no infinito
+
+            // 3. Clipar este ponto SCN
+            if (clipper->calcularCodigoRegiao(p_scn_temp) == ClipperCohenSutherland::DENTRO) {
+                // 4. Se visível em SCN, transformar o ponto ORIGINAL para Tela
+                //    (É mais preciso transformar o original do que o SCN já normalizado se houve divisão por W)
+                Ponto2D pTela(matTransformacaoOriginalParaTela * pontoNaCircOriginal);
+
+                // 5. Desenhar o ponto (como na sua função: desenhar uma linha de um pixel)
+                painter.drawLine(qRound(pTela.obterX()), qRound(pTela.obterY()),
+                                  qRound(pTela.obterX()), qRound(pTela.obterY()));
+                // Ou mais diretamente:
+                //painter.drawPoint(qRound(pTela.obterX()), qRound(pTela.obterY()));
+            }
+        }
     }
 }
 
-void FrameDesenho::desenharMolduraViewport(QPainter& painter) {
-    painter.setPen(QPen(Qt::gray, 1, Qt::DashLine));
-    // A moldura do FrameDesenho já é visível pelo seu estilo.
-    // Esta é uma moldura LÓGICA da viewport DENTRO do frame, se necessário.
-    // Neste caso, a viewport lógica e o frame coincidem.
-    // painter.drawRect(0, 0, width() -1, height() -1);
+void FrameDesenho::desenharDetalhesDaViewport(QPainter& painter) {
+    if (!viewportTela || viewportTela->obterLargura() <= 0 || viewportTela->obterAltura() <= 0) {
+        return; // Não desenha se a viewport não for válida
+    }
+
+    // Obter o retângulo da viewport em coordenadas de tela (pixels)
+    QRect vpRect = viewportTela->obterRect();
+
+    // --- 1. Borda Vermelha da Viewport ---
+    painter.save(); // Salva o estado atual do painter
+    QPen bordaPen(Qt::red, 1, Qt::SolidLine); // Caneta vermelha, 1 pixel de espessura
+    painter.setPen(bordaPen);
+    painter.setBrush(Qt::NoBrush); // Sem preenchimento para o retângulo da borda
+    painter.drawRect(vpRect.adjusted(0, 0, -1, -1)); // -1 para desenhar dentro dos limites exatos
+    painter.restore(); // Restaura o estado do painter
+
+    // --- 2. Label "Viewport" ---
+    painter.save();
+    painter.setPen(Qt::black); // Cor do texto
+    QString textoLabelViewport = "Viewport";
+    QFontMetrics fm = painter.fontMetrics();
+    int larguraTexto = fm.horizontalAdvance(textoLabelViewport);
+    int alturaTexto = fm.height();
+    // Posiciona acima da borda da viewport, centralizado
+    int xLabel = vpRect.x() + (vpRect.width() - larguraTexto) / 2;
+    int yLabel = vpRect.y() - alturaTexto / 2 - 2; // 2 pixels de espaço acima da borda
+    if (yLabel < fm.ascent()) yLabel = fm.ascent(); // Garante que não saia do topo do frame
+    painter.drawText(xLabel, yLabel, textoLabelViewport);
+    painter.restore();
+
+    // --- 3. Eixos X e Y dentro da Viewport ---
+    painter.save();
+    // Matriz para transformar de NDC para coordenadas da viewport (tela)
+    Matriz matTransformacaoVP = viewportTela->obterMatrizTransformacaoViewport();
+
+    // Definir pontos dos eixos em NDC
+    Ponto2D eixoY_ndc_inicio(0.0, -1.0); // Y de -1 a 1 em X=0
+    Ponto2D eixoY_ndc_fim(0.0, 1.0);
+    Ponto2D eixoX_ndc_inicio(-1.0, 0.0); // X de -1 a 1 em Y=0
+    Ponto2D eixoX_ndc_fim(1.0, 0.0);
+
+    // Transformar para coordenadas da viewport
+    Ponto2D eixoY_tela_inicio(matTransformacaoVP * eixoY_ndc_inicio);
+    Ponto2D eixoY_tela_fim(matTransformacaoVP * eixoY_ndc_fim);
+    Ponto2D eixoX_tela_inicio(matTransformacaoVP * eixoX_ndc_inicio);
+    Ponto2D eixoX_tela_fim(matTransformacaoVP * eixoX_ndc_fim);
+
+    // Cor e estilo dos eixos
+    QPen eixoPen(Qt::darkGray, 1, Qt::DashLine); // Cinza escuro, tracejado
+    painter.setPen(eixoPen);
+
+    // Desenhar os eixos
+    // É importante clipar as linhas para que fiquem DENTRO da vpRect,
+    // pois a transformação pode resultar em pontos fora se a janela mundo for maior que NDC.
+    // QPainter já clipa para a área do widget, mas para ser explícito com a viewport:
+    painter.setClipRect(vpRect); // Clipar o desenho à área da viewport
+
+    painter.drawLine(QPointF(eixoX_tela_inicio.obterX(), eixoX_tela_inicio.obterY()),
+                     QPointF(eixoX_tela_fim.obterX(), eixoX_tela_fim.obterY())); // Eixo X
+    painter.drawLine(QPointF(eixoY_tela_inicio.obterX(), eixoY_tela_inicio.obterY()),
+                     QPointF(eixoY_tela_fim.obterX(), eixoY_tela_fim.obterY())); // Eixo Y
+
+
+    // Labels para os eixos
+    painter.setPen(Qt::black); // Cor para os rótulos dos eixos
+    QFont eixoLabelFont = painter.font();
+    eixoLabelFont.setPointSize(std::max(6, eixoLabelFont.pointSize() - 2)); // Fonte um pouco menor
+    painter.setFont(eixoLabelFont);
+    QFontMetrics fmEixo = painter.fontMetrics();
+
+    // Label "Eixo X"
+    QString labelX = "Eixo X";
+    int larguraLabelX = fmEixo.horizontalAdvance(labelX);
+    // Posicionar próximo ao final do eixo X (direita), dentro da viewport
+    double posXLabelX = eixoX_tela_fim.obterX() - larguraLabelX - 5; // 5 pixels de margem
+    double posYLabelX = eixoX_tela_fim.obterY() - fmEixo.descent() - 2; // Um pouco acima do eixo
+    // Ajustar para não sair da viewport
+    if (posXLabelX + larguraLabelX > vpRect.right()) posXLabelX = vpRect.right() - larguraLabelX;
+    if (posXLabelX < vpRect.left()) posXLabelX = vpRect.left();
+    if (posYLabelX + fmEixo.height() > vpRect.bottom()) posYLabelX = vpRect.bottom() - fmEixo.descent();
+    if (posYLabelX - fmEixo.ascent() < vpRect.top()) posYLabelX = vpRect.top() + fmEixo.ascent();
+    painter.drawText(qRound(posXLabelX), qRound(posYLabelX), labelX);
+
+    // Label "Eixo Y"
+    QString labelY = "Eixo Y";
+    int larguraLabelY = fmEixo.horizontalAdvance(labelY);
+    // Posicionar próximo ao final do eixo Y (topo, pois Y na tela cresce para baixo), dentro da viewport
+    double posXLabelY = eixoY_tela_fim.obterX() + 5; // 5 pixels à direita do eixo Y
+    double posYLabelY = eixoY_tela_fim.obterY() + fmEixo.ascent() + 5; // 5 pixels abaixo do topo do eixo
+    // Ajustar para não sair da viewport
+    if (posXLabelY + larguraLabelY > vpRect.right()) posXLabelY = vpRect.right() - larguraLabelY;
+    if (posXLabelY < vpRect.left()) posXLabelY = vpRect.left();
+    if (posYLabelY > vpRect.bottom()) posYLabelY = vpRect.bottom() - fmEixo.descent();
+    if (posYLabelY - fmEixo.ascent() < vpRect.top()) posYLabelY = vpRect.top() + fmEixo.ascent();
+    painter.drawText(qRound(posXLabelY), qRound(posYLabelY), labelY);
+
+    painter.setClipping(false); // Remove o clipping específico da viewport
+    painter.restore(); // Restaura o estado do painter
 }
 
 // Implementações de mouse events (descomente e adapte se necessário)

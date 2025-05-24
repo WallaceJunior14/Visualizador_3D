@@ -52,7 +52,8 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = ../../clipper.cpp \
+SOURCES       = ../../circunferencia_obj.cpp \
+		../../clipper.cpp \
 		../../display_file.cpp \
 		../../frame_desenho.cpp \
 		../../janela_mundo.cpp \
@@ -67,7 +68,8 @@ SOURCES       = ../../clipper.cpp \
 		../../transformador_geometrico.cpp \
 		../../viewport_tela.cpp moc_frame_desenho.cpp \
 		moc_mainwindow.cpp
-OBJECTS       = clipper.o \
+OBJECTS       = circunferencia_obj.o \
+		clipper.o \
 		display_file.o \
 		frame_desenho.o \
 		janela_mundo.o \
@@ -153,7 +155,8 @@ DIST          = /usr/lib64/qt6/mkspecs/features/spec_pre.prf \
 		/usr/lib64/qt6/mkspecs/features/exceptions.prf \
 		/usr/lib64/qt6/mkspecs/features/yacc.prf \
 		/usr/lib64/qt6/mkspecs/features/lex.prf \
-		../../../../visualizador_3d.pro ../../clipper.h \
+		../../../../visualizador_3d.pro ../../circunferencia_obj.h \
+		../../clipper.h \
 		../../display_file.h \
 		../../frame_desenho.h \
 		../../janela_mundo.h \
@@ -166,7 +169,8 @@ DIST          = /usr/lib64/qt6/mkspecs/features/spec_pre.prf \
 		../../reta_obj.h \
 		../../tipos.h \
 		../../transformador_geometrico.h \
-		../../viewport_tela.h ../../clipper.cpp \
+		../../viewport_tela.h ../../circunferencia_obj.cpp \
+		../../clipper.cpp \
 		../../display_file.cpp \
 		../../frame_desenho.cpp \
 		../../janela_mundo.cpp \
@@ -355,8 +359,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib64/qt6/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../../clipper.h ../../display_file.h ../../frame_desenho.h ../../janela_mundo.h ../../mainwindow.h ../../matriz.h ../../objeto_grafico.h ../../poligono_obj.h ../../ponto2d.h ../../ponto_obj.h ../../reta_obj.h ../../tipos.h ../../transformador_geometrico.h ../../viewport_tela.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../../clipper.cpp ../../display_file.cpp ../../frame_desenho.cpp ../../janela_mundo.cpp ../../main.cpp ../../mainwindow.cpp ../../matriz.cpp ../../objeto_grafico.cpp ../../poligono_obj.cpp ../../ponto2d.cpp ../../ponto_obj.cpp ../../reta_obj.cpp ../../transformador_geometrico.cpp ../../viewport_tela.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../../circunferencia_obj.h ../../clipper.h ../../display_file.h ../../frame_desenho.h ../../janela_mundo.h ../../mainwindow.h ../../matriz.h ../../objeto_grafico.h ../../poligono_obj.h ../../ponto2d.h ../../ponto_obj.h ../../reta_obj.h ../../tipos.h ../../transformador_geometrico.h ../../viewport_tela.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../../circunferencia_obj.cpp ../../clipper.cpp ../../display_file.cpp ../../frame_desenho.cpp ../../janela_mundo.cpp ../../main.cpp ../../mainwindow.cpp ../../matriz.cpp ../../objeto_grafico.cpp ../../poligono_obj.cpp ../../ponto2d.cpp ../../ponto_obj.cpp ../../reta_obj.cpp ../../transformador_geometrico.cpp ../../viewport_tela.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../../mainwindow.ui $(DISTDIR)/
 
 
@@ -439,6 +443,13 @@ compiler_lex_clean:
 compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean compiler_uic_clean 
 
 ####### Compile
+
+circunferencia_obj.o: ../../circunferencia_obj.cpp ../../circunferencia_obj.h \
+		../../objeto_grafico.h \
+		../../ponto2d.h \
+		../../matriz.h \
+		../../tipos.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o circunferencia_obj.o ../../circunferencia_obj.cpp
 
 clipper.o: ../../clipper.cpp ../../clipper.h \
 		../../ponto2d.h \

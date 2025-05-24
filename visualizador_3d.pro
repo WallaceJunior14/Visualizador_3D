@@ -9,6 +9,7 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    circunferencia_obj.cpp \
     clipper.cpp \
     display_file.cpp \
     frame_desenho.cpp \
@@ -25,6 +26,7 @@ SOURCES += \
     viewport_tela.cpp
 
 HEADERS += \
+    circunferencia_obj.h \
     clipper.h \
     display_file.h \
     frame_desenho.h \

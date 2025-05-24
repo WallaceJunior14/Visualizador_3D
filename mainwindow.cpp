@@ -1,19 +1,19 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h" // Importante: gerado pelo UIC a partir do mainwindow.ui
+#include "ui_mainwindow.h"
 
-#include "frame_desenho.h" // Nosso widget de desenho
-#include "display_file.h"
-#include "janela_mundo.h" // Para interagir com a janela do frameDesenho
+// ... outros includes ...
 #include "ponto_obj.h"
 #include "reta_obj.h"
 #include "poligono_obj.h"
+#include "circunferencia_obj.h"
 #include "transformador_geometrico.h"
-#include "ponto2d.h" // Incluir Ponto2D
+#include "ponto2d.h"
 
 #include <QColorDialog>
 #include <QMessageBox>
-#include <QFileDialog> // Para btnCarregarOBJ
-#include <QDebug>      // Para mensagens de depuração
+#include <QFileDialog>
+#include <QDebug>
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -70,9 +70,9 @@ void MainWindow::inicializarUI() {
     // Popular ComboBox de formas
     ui->comboFormas->addItem("Ponto", static_cast<int>(TipoObjeto::PONTO));
     ui->comboFormas->addItem("Reta", static_cast<int>(TipoObjeto::RETA));
-    ui->comboFormas->addItem("Polígono (Triângulo)", static_cast<int>(TipoObjeto::POLIGONO)); // Exemplo para polígono
-    ui->comboFormas->addItem("Polígono (Quadrado)", static_cast<int>(TipoObjeto::POLIGONO)); // Exemplo para polígono
-    // Adicionar mais tipos de polígonos se necessário ou um modo genérico.
+    ui->comboFormas->addItem("Polígono (Triângulo)", static_cast<int>(TipoObjeto::POLIGONO));
+    ui->comboFormas->addItem("Polígono (Quadrado)", static_cast<int>(TipoObjeto::POLIGONO));
+     ui->comboFormas->addItem("Circunferência", static_cast<int>(TipoObjeto::CIRCUNFERENCIA));
 
     // Configurar estado inicial dos spinners de coordenadas
     on_comboFormas_currentIndexChanged(0); // Chama para configurar visibilidade inicial
@@ -123,9 +123,14 @@ void MainWindow::gerenciarVisibilidadeSpinners(const QString& tipoForma) {
         // Vou manter X3/Y3 visível e o usuário pode adicionar mais pontos depois se a lógica permitir.
         //mostrarX3Y3 = true; // E implicitamente X4Y4...
         // A UI só tem até X3Y3. Para mais pontos, a UI teria que ser dinâmica ou usar QInputDialog.
+    } else if (tipoForma == "Circunferência") {
+        mostrarX1Y1 = true;  // Para o centro (X,Y)
+        mostrarX2Y2 = false;
+        mostrarX3Y3 = false;
+        mostrarRaio = true;  // Para o raio
+
+        ui->lblRaio->setVisible(mostrarRaio); ui->spinRaio->setVisible(mostrarRaio);
     }
-    // "Raio" não é usado para Ponto, Reta, Polígono 2D como definido.
-    // Poderia ser para Círculo, que não está na lista.
 
     ui->lblCoordenadaX1->setVisible(mostrarX1Y1); ui->spinX1->setVisible(mostrarX1Y1);
     ui->lblCoordenadaY1->setVisible(mostrarX1Y1); ui->spinY1->setVisible(mostrarX1Y1);
@@ -191,24 +196,29 @@ void MainWindow::on_btnDesenhar_clicked() {
         QList<Ponto2D> vertices = {p1, p2, p3};
         novaForma = std::make_shared<PoligonoObj>(nomeForma, vertices, corSelecionadaParaDesenho);
     } else if (tipoSelecionado == "Polígono (Quadrado)") {
-        // Para um quadrado a partir de X1,Y1 e X2,Y2 (pontos opostos)
-        // Ponto2D p2(ui->spinX2->value(), ui->spinY2->value());
-        // Ponto2D p3(p1.obterX(), p2.obterY());
-        // Ponto2D p4(p2.obterX(), p1.obterY());
-        // QList<Ponto2D> vertices = {p1, p3, p2, p4}; // Ordem importa para desenho
-        // Ou, se X1Y1, X2Y2, X3Y3 são 3 vértices e o 4o é para fechar um retângulo
-        Ponto2D p1(ui->spinX1->value(), ui->spinY1->value());
+        if (!ui->spinX2->isVisible()) { // Checagem de segurança
+            QMessageBox::warning(this, "Entrada Inválida", "Defina o segundo ponto (X2, Y2) para o quadrado.");
+            return;
+        }
         Ponto2D p2(ui->spinX2->value(), ui->spinY2->value());
-        // Supondo que X3, Y3 são para o terceiro ponto e o usuário quer um polígono com mais pontos.
-        // Um quadrado pode ser feito com 4 pontos. Para a UI com apenas 3,
-        // pode ser um polígono genérico com 3 pontos, ou o usuário adiciona mais depois.
-        // Para este exemplo, faremos um polígono com os pontos fornecidos (até 3 da UI).
-        QList<Ponto2D> vertices;
-        vertices.append(p1);
-        vertices.append(p2);
 
+        // Vértices do retângulo/quadrado: p1, (x2,y1), p2, (x1,y2)
+        // p1 já está definido como (ui->spinX1->value(), ui->spinY1->value())
+        Ponto2D v1 = p1;
+        Ponto2D v2(p2.obterX(), p1.obterY()); // Canto superior direito ou inferior direito
+        Ponto2D v3 = p2;                     // Canto oposto a v1
+        Ponto2D v4(p1.obterX(), p2.obterY()); // Canto restante
 
+        QList<Ponto2D> vertices = {v1, v2, v3, v4};
         novaForma = std::make_shared<PoligonoObj>(nomeForma, vertices, corSelecionadaParaDesenho);
+    } else if (tipoSelecionado == "Circunferência") {
+        if (!ui->spinRaio->isVisible() || ui->spinRaio->value() <= 0) {
+            QMessageBox::warning(this, "Entrada Inválida", "O raio da circunferência deve ser positivo.");
+            return;
+        }
+        double raio = ui->spinRaio->value();
+        // p1 já está definido como o centro (ui->spinX1->value(), ui->spinY1->value())
+        novaForma = std::make_shared<CircunferenciaObj>(nomeForma, p1, raio, corSelecionadaParaDesenho);
     }
 
 
