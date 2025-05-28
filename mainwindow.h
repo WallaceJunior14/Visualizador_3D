@@ -26,13 +26,14 @@ private slots:
     void on_btnModificarForma_clicked();
     void on_btnDesenhar_clicked();
     void on_btnExcluirForma_clicked();
+    void on_btnLimparSelecao_clicked();
     void on_btnCarregarOBJ_clicked(); // Placeholder
 
     // Transformações
     void on_spinTranslacaoX_valueChanged(double arg1);
     void on_spinTranslacaoY_valueChanged(double arg1);
-    void on_hsEscalaX_valueChanged(int value);
-    void on_hsEscalaY_valueChanged(int value);
+    void on_spinEscalaX_valueChanged(double value);
+    void on_spinEscalaY_valueChanged(double value);
     void on_hsRotacaoX_valueChanged(int value); // Interpretação como rotação em Z
 
     void on_cbDisplayFile_currentIndexChanged(int index);

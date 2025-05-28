@@ -36,8 +36,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // Conexões
     connect(ui->spinTranslacaoX, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::on_spinTranslacaoX_valueChanged);
     connect(ui->spinTranslacaoY, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::on_spinTranslacaoY_valueChanged);
-    connect(ui->hsEscalaX, &QSlider::valueChanged, this, &MainWindow::on_hsEscalaX_valueChanged);
-    connect(ui->hsEscalaY, &QSlider::valueChanged, this, &MainWindow::on_hsEscalaY_valueChanged);
+    connect(ui->spinEscalaX, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::on_spinEscalaX_valueChanged);
+    connect(ui->spinEscalaY, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::on_spinEscalaY_valueChanged);
     connect(ui->hsRotacaoX, &QSlider::valueChanged, this, &MainWindow::on_hsRotacaoX_valueChanged);
 
     connect(ui->cbDisplayFile, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_cbDisplayFile_currentIndexChanged); // Certifique-se que esta conexão existe
@@ -108,8 +108,8 @@ void MainWindow::inicializarUI() {
 
     on_comboFormas_currentIndexChanged(0);
 
-    ui->hsEscalaX->setValue(0);
-    ui->hsEscalaY->setValue(0);
+    ui->spinEscalaX->setValue(0);
+    ui->spinEscalaY->setValue(0);
     ui->hsRotacaoX->setValue(0);
     // ui->hsRotacaoY->setValue(0); // Desabilitado na UI, mas se usar
     // ui->hsRotacaoZ->setValue(0); // Desabilitado na UI
@@ -520,8 +520,8 @@ void MainWindow::on_spinTranslacaoY_valueChanged(double /*arg1*/) {
 void MainWindow::aplicarEscalaAtual() {
     if (!ui->tabWidget->isEnabled()) return;
 
-    double valX = ui->hsEscalaX->value();
-    double valY = ui->hsEscalaY->value(); // Usado para objeto, para câmera podemos usar só X
+    double valX = ui->spinEscalaX->value();
+    double valY = ui->spinEscalaY->value(); // Usado para objeto, para câmera podemos usar só X
 
     if (objetoSelecionado && displayFile && displayFile->obterJanelaMundoAtiva()) {
         // Escalar OBJETO SELECIONADO
@@ -544,11 +544,11 @@ void MainWindow::aplicarEscalaAtual() {
     if (ui->frameDesenho) ui->frameDesenho->redesenhar();
 }
 
-void MainWindow::on_hsEscalaX_valueChanged(int /*value*/) {
+void MainWindow::on_spinEscalaX_valueChanged(double /*value*/) {
     aplicarEscalaAtual();
 }
 
-void MainWindow::on_hsEscalaY_valueChanged(int /*value*/) {
+void MainWindow::on_spinEscalaY_valueChanged(double /*value*/) {
     aplicarEscalaAtual();
 }
 
@@ -741,13 +741,16 @@ void MainWindow::updateTransformationTargetUIState() {
     // pois eles geralmente representam uma ação a ser aplicada, não um estado fixo do objeto/câmera
     ui->spinTranslacaoX->setValue(0);
     ui->spinTranslacaoY->setValue(0);
-    ui->hsEscalaX->setValue(0);
-    ui->hsEscalaY->setValue(0);
+    ui->spinEscalaX->setValue(0);
+    ui->spinEscalaY->setValue(0);
     ui->hsRotacaoX->setValue(0);
 }
 
+void MainWindow::on_btnLimparSelecao_clicked(){
+    ui->cbDisplayFile->setCurrentIndex(-1);
+}
+
 void MainWindow::on_btnCarregarOBJ_clicked() {
-    // ... seu código ...
     QMessageBox::information(this, "Carregar", "Funcionalidade de carregar arquivo ainda não implementada completamente.");
 }
 
