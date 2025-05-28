@@ -17,8 +17,8 @@ public:
     ~FrameDesenho();
 
     void definirDisplayFile(std::shared_ptr<DisplayFile> df);
-    void definirJanelaMundo(std::shared_ptr<JanelaMundo> janela);
     std::shared_ptr<JanelaMundo> obterJanelaMundo() const;
+    std::shared_ptr<JanelaMundo> obterJanelaMundoAtiva() const;
 
     void atualizarViewport();
     void redesenhar();
@@ -29,7 +29,6 @@ protected:
 
 private:
     std::shared_ptr<DisplayFile> displayFile;
-    std::shared_ptr<JanelaMundo> janelaMundo;
     std::shared_ptr<ViewportTela> viewportTela; // A viewport com as coordenadas de tela
     std::unique_ptr<ClipperCohenSutherland> clipper;
 

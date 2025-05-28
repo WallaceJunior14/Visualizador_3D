@@ -23,6 +23,7 @@ private slots:
     // Slots da interface gráfica
     void on_comboFormas_currentIndexChanged(int index);
     void on_btnCor_clicked();
+    void on_btnModificarForma_clicked();
     void on_btnDesenhar_clicked();
     void on_btnExcluirForma_clicked();
     void on_btnCarregarOBJ_clicked(); // Placeholder
@@ -36,6 +37,8 @@ private slots:
 
     void on_cbDisplayFile_currentIndexChanged(int index);
 
+    void on_cbDFCamera_currentIndexChanged(int index);
+
     // Slots para zoom/pan (opcional)
     // void zoomIn();
     // void zoomOut();
@@ -47,12 +50,20 @@ private slots:
 private:
     Ui::MainWindow *ui;
     std::shared_ptr<DisplayFile> displayFile;
-    std::shared_ptr<ObjetoGrafico> objetoSelecionado;
+    std::shared_ptr<ObjetoGrafico> objetoSelecionado = nullptr;
+    std::shared_ptr<JanelaMundo> janelaSelecionada = nullptr;
     QColor corSelecionadaParaDesenho;
 
     void inicializarUI(); // Inicializa comboboxes, estados iniciais, etc.
     void gerenciarVisibilidadeSpinners(const QString& tipoForma);
     void atualizarCbDisplayFile();
+    void atualizarCbDFCamera();
+    void atualizarObjetoComDadosDaUI(std::shared_ptr<ObjetoGrafico>& objeto);
+    QString gerarNomeFormatadoParaObjeto(const QString& nomeBase,
+                                         std::shared_ptr<ObjetoGrafico> objeto,
+                                         const QColor& cor);
+    QString tipoObjetoParaStringUI(TipoObjeto tipo, int numPontos = 0);
+    void updateTransformationTargetUIState();
 
     // Aplicam transformações conforme os valores atuais dos controles
     void aplicarTranslacaoAtual();

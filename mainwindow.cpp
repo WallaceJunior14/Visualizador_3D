@@ -17,134 +17,135 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow), // Inicializa o ui
+    ui(new Ui::MainWindow),
     corSelecionadaParaDesenho(Qt::black)
 {
-    ui->setupUi(this); // Configura a UI a partir do arquivo .ui
-    // Neste ponto, ui->frameDesenho já é um frameDesenho* (devido à promoção)
+    ui->setupUi(this);
 
-    // 1. Inicializar o DisplayFile
     displayFile = std::make_shared<DisplayFile>();
 
-    // 2. Configurar o frameDesenho (que foi promovido a partir do QFrame no .ui)
-    // O frameDesenho é ui->frameDesenho
-    if (ui->frameDesenho) { // Verifica se a promoção funcionou
+    if (ui->frameDesenho) {
         ui->frameDesenho->definirDisplayFile(displayFile);
     } else {
         QMessageBox::critical(this, "Erro de UI", "O frameDesenho não foi carregado corretamente da UI.");
-        // Tratar o erro, talvez fechar a aplicação ou usar um renderizador padrão
+        // Considere não continuar se o frameDesenho for essencial
     }
 
-    // 3. Configurações iniciais da UI
-    inicializarUI();
+    inicializarUI(); // Chama on_comboFormas_currentIndexChanged(0) -> gerenciarVisibilidadeSpinners
 
-    // 4. Conectar sinais e slots (Muitos já podem ser conectados pelo nome usando on_NOMEOBJETO_SINAL)
-    // Conexões explícitas se o nome não seguir o padrão Qt Auto-Connection
+    // Conexões
     connect(ui->spinTranslacaoX, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::on_spinTranslacaoX_valueChanged);
     connect(ui->spinTranslacaoY, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::on_spinTranslacaoY_valueChanged);
-
     connect(ui->hsEscalaX, &QSlider::valueChanged, this, &MainWindow::on_hsEscalaX_valueChanged);
     connect(ui->hsEscalaY, &QSlider::valueChanged, this, &MainWindow::on_hsEscalaY_valueChanged);
-
     connect(ui->hsRotacaoX, &QSlider::valueChanged, this, &MainWindow::on_hsRotacaoX_valueChanged);
-    // Se for usar os outros sliders de rotação para algo (ex: rotação 3D no futuro)
-    // connect(ui->hsRotacaoY, &QSlider::valueChanged, this, ...);
-    // connect(ui->hsRotacaoZ, &QSlider::valueChanged, this, ...);
+
+    connect(ui->cbDisplayFile, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_cbDisplayFile_currentIndexChanged); // Certifique-se que esta conexão existe
+    connect(ui->cbDFCameras, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_cbDFCamera_currentIndexChanged);
+    connect(ui->btnModificarForma, &QPushButton::clicked, this, &MainWindow::on_btnModificarForma_clicked);
+    // Adicione connect para btnDesenhar e btnExcluirForma se não estiverem por auto-conexão
+    // connect(ui->btnDesenhar, &QPushButton::clicked, this, &MainWindow::on_btnDesenhar_clicked);
+    // connect(ui->btnExcluirForma, &QPushButton::clicked, this, &MainWindow::on_btnExcluirForma_clicked);
+
+
+    atualizarCbDisplayFile(); // Popula ComboBox de objetos
+    atualizarCbDFCamera();    // Popula ComboBox de câmeras
+
+    // Define o estado inicial da UI após popular os comboboxes
+    // Nenhum objeto ou câmera selecionada para transformação inicialmente.
+    // Não é necessário chamar setCurrentIndex(-1) aqui se os comboboxes estão vazios
+    // ou se a atualização deles não seleciona nada por padrão.
+    // updateTransformationTargetUIState() já será chamado pelos setCurrentIndex(-1)
+    // nos slots se eles forem acionados por clear() ou se o índice mudar para -1.
+    // Para garantir o estado inicial correto:
+    objetoSelecionado = nullptr;
+    janelaSelecionada = nullptr;
+
+    // Se cbDFCameras tiver itens, seleciona o ativo do displayFile ou o primeiro.
+    // Isso DISPARARÁ on_cbDFCamera_currentIndexChanged, que por sua vez chamará updateTransformationTargetUIState.
+    if (ui->cbDFCameras->count() > 0) {
+        if (displayFile && displayFile->obterJanelaMundoAtiva()) {
+            int idx = ui->cbDFCameras->findText(displayFile->obterJanelaMundoAtiva()->obterNome());
+            if (idx != -1) {
+                ui->cbDFCameras->setCurrentIndex(idx); // Dispara o slot
+            } else if (ui->cbDFCameras->count() > 0) {
+                ui->cbDFCameras->setCurrentIndex(0); // Dispara o slot
+            }
+        } else if (ui->cbDFCameras->count() > 0) {
+            ui->cbDFCameras->setCurrentIndex(0); // Dispara o slot
+        }
+    } else {
+        // Se não houver câmeras, e nenhum objeto selecionado (que é o padrão aqui),
+        // a UI deve estar no estado "pronto para adicionar".
+        // Chamada explícita para garantir, caso os setCurrentIndex acima não disparem.
+        updateTransformationTargetUIState();
+    }
+    // A lógica acima para selecionar a câmera ativa já deve ter chamado updateTransformationTargetUIState
+    // através do slot on_cbDFCamera_currentIndexChanged. Se nenhuma câmera for selecionada,
+    // updateTransformationTargetUIState ainda precisa ser chamado uma vez para o estado inicial.
+    // Se on_cbDFCamera_currentIndexChanged não foi chamado (nenhuma câmera), chamamos manualmente.
+    if(ui->cbDFCameras->currentIndex() == -1 && ui->cbDisplayFile->currentIndex() == -1) {
+        updateTransformationTargetUIState();
+    }
 
 
     if (ui->frameDesenho) {
         ui->frameDesenho->redesenhar();
     }
-    atualizarCbDisplayFile();
-    if (ui->cbDisplayFile->count() > 0) {
-        ui->cbDisplayFile->setCurrentIndex(0); // Seleciona o primeiro objeto por padrão
-        on_cbDisplayFile_currentIndexChanged(0); // Dispara a lógica de seleção
-    }
 }
 
 MainWindow::~MainWindow() {
-    delete ui; // ui é um ponteiro gerenciado, precisa ser deletado
+    delete ui;
 }
 
 void MainWindow::inicializarUI() {
-    // Popular ComboBox de formas
+    // ... (seu código existente para popular comboFormas, configurar spinners, etc.)
     ui->comboFormas->addItem("Ponto", static_cast<int>(TipoObjeto::PONTO));
     ui->comboFormas->addItem("Reta", static_cast<int>(TipoObjeto::RETA));
     ui->comboFormas->addItem("Polígono (Triângulo)", static_cast<int>(TipoObjeto::POLIGONO));
     ui->comboFormas->addItem("Polígono (Quadrado)", static_cast<int>(TipoObjeto::POLIGONO));
-     ui->comboFormas->addItem("Circunferência", static_cast<int>(TipoObjeto::CIRCUNFERENCIA));
+    ui->comboFormas->addItem("Circunferência", static_cast<int>(TipoObjeto::CIRCUNFERENCIA));
 
-    // Configurar estado inicial dos spinners de coordenadas
-    on_comboFormas_currentIndexChanged(0); // Chama para configurar visibilidade inicial
+    on_comboFormas_currentIndexChanged(0);
 
-    // Definir ranges e valores iniciais para sliders de transformação se necessário
-    // Escala: Sliders de -10 a 10. Interpretar 0 como fator 1.0.
-    // Valor V do slider -> Fator de escala = 1.0 + (V / 10.0) (se V=0 => 1x, V=10 => 2x, V=-10 => 0x - CUIDADO!)
-    // Melhor: Fator = pow(BASE_ESCALA, V). Ex: BASE_ESCALA = 1.1.
-    // Ou usar QDoubleSpinBox para fatores de escala diretos.
-    // Para este exemplo, vamos tratar o valor do slider como um delta aplicado.
-    ui->hsEscalaX->setValue(0); // Representa escala 1.0x (sem mudança)
+    ui->hsEscalaX->setValue(0);
     ui->hsEscalaY->setValue(0);
-
-    // Rotação: Sliders de -180 a 180 (graus)
     ui->hsRotacaoX->setValue(0);
-    ui->hsRotacaoY->setValue(0);
-    ui->hsRotacaoZ->setValue(0);
+    // ui->hsRotacaoY->setValue(0); // Desabilitado na UI, mas se usar
+    // ui->hsRotacaoZ->setValue(0); // Desabilitado na UI
 
-    // Definir o frame de desenho para ter foco para eventos de teclado (se necessário para pan/zoom por teclado)
     if(ui->frameDesenho) {
         ui->frameDesenho->setFocusPolicy(Qt::StrongFocus);
     }
-
-    // Desabilitar controles de transformação se nenhum objeto estiver selecionado.
-    ui->tabWidget->setEnabled(objetoSelecionado != nullptr);
+    // A habilitação do tabWidget agora depende de objetoSelecionado OU janelaSelecionada
+    ui->tabWidget->setEnabled(objetoSelecionado != nullptr || janelaSelecionada != nullptr);
 }
 
+
+// ... gerenciarVisibilidadeSpinners e atualizarCbDisplayFile (semelhantes ao seu código) ...
 void MainWindow::gerenciarVisibilidadeSpinners(const QString& tipoForma) {
     bool mostrarX1Y1 = true;
     bool mostrarX2Y2 = false;
     bool mostrarX3Y3 = false;
     bool mostrarRaio = false;
 
-    if (tipoForma == "Ponto") {
-        // Apenas X1, Y1
-    } else if (tipoForma == "Reta") {
-        mostrarX2Y2 = true;
-    } else if (tipoForma == "Polígono (Triângulo)") {
-        mostrarX2Y2 = true;
-        mostrarX3Y3 = true;
-    } else if (tipoForma == "Polígono (Quadrado)") {
-        mostrarX2Y2 = true;
-        // Para um quadrado, X3/Y3 e X4/Y4 podem ser derivados ou entrados de outra forma.
-        // Por simplicidade, o usuário pode entrar 3 e o 4º é calculado, ou entra os 4.
-        // Para este exemplo, vamos pedir 2 pontos (canto opostos) ou 4 pontos.
-        // O código atual para polígono aceita uma lista de pontos.
-        // Para a UI simplificada, talvez pedir lado e ponto inicial para um quadrado.
-        // Vou manter X3/Y3 visível e o usuário pode adicionar mais pontos depois se a lógica permitir.
-        //mostrarX3Y3 = true; // E implicitamente X4Y4...
-        // A UI só tem até X3Y3. Para mais pontos, a UI teria que ser dinâmica ou usar QInputDialog.
-    } else if (tipoForma == "Circunferência") {
-        mostrarX1Y1 = true;  // Para o centro (X,Y)
-        mostrarX2Y2 = false;
-        mostrarX3Y3 = false;
-        mostrarRaio = true;  // Para o raio
-
-        ui->lblRaio->setVisible(mostrarRaio); ui->spinRaio->setVisible(mostrarRaio);
-    }
+    if (tipoForma == "Ponto") { /* ... */ }
+    else if (tipoForma == "Reta") { mostrarX2Y2 = true; }
+    else if (tipoForma == "Polígono (Triângulo)") { mostrarX2Y2 = true; mostrarX3Y3 = true; }
+    else if (tipoForma == "Polígono (Quadrado)") { mostrarX2Y2 = true; }
+    else if (tipoForma == "Circunferência") { mostrarRaio = true; }
 
     ui->lblCoordenadaX1->setVisible(mostrarX1Y1); ui->spinX1->setVisible(mostrarX1Y1);
     ui->lblCoordenadaY1->setVisible(mostrarX1Y1); ui->spinY1->setVisible(mostrarX1Y1);
-
     ui->lblCoordenadaX2->setVisible(mostrarX2Y2); ui->spinX2->setVisible(mostrarX2Y2);
     ui->lblCoordenadaY2->setVisible(mostrarX2Y2); ui->spinY2->setVisible(mostrarX2Y2);
-
     ui->lblCoordenadaX3->setVisible(mostrarX3Y3); ui->spinX3->setVisible(mostrarX3Y3);
     ui->lblCoordenadaY3->setVisible(mostrarX3Y3); ui->spinY3->setVisible(mostrarX3Y3);
-
     ui->lblRaio->setVisible(mostrarRaio); ui->spinRaio->setVisible(mostrarRaio);
 }
 
 void MainWindow::atualizarCbDisplayFile() {
+    QString nomeObjetoSelecionadoAnteriormente = objetoSelecionado ? objetoSelecionado->obterNome() : "";
     ui->cbDisplayFile->clear();
     if (displayFile) {
         for (const auto& obj : displayFile->obterObjetos()) {
@@ -153,87 +154,311 @@ void MainWindow::atualizarCbDisplayFile() {
             }
         }
     }
-    // Habilitar/desabilitar controles de transformação
-    ui->tabWidget->setEnabled(objetoSelecionado != nullptr && ui->cbDisplayFile->count() > 0);
+    if (!nomeObjetoSelecionadoAnteriormente.isEmpty()) {
+        int idx = ui->cbDisplayFile->findText(nomeObjetoSelecionadoAnteriormente);
+        if (idx != -1) {
+            ui->cbDisplayFile->setCurrentIndex(idx);
+            // Não chamar on_cbDisplayFile_currentIndexChanged aqui para evitar loop se chamado de dentro dele
+        } else {
+            objetoSelecionado = nullptr; // Objeto não existe mais
+        }
+    }
+    // A habilitação do tabWidget é tratada em on_cbDisplayFile_currentIndexChanged e on_cbDFCamera_currentIndexChanged
 }
 
 
-// --- Slots da UI ---
+// Novo método para popular o ComboBox de Câmeras/Janelas
+void MainWindow::atualizarCbDFCamera() {
+    QString nomeJanelaSelecionadaAnteriormente = janelaSelecionada ? janelaSelecionada->obterNome() : (displayFile && displayFile->obterJanelaMundoAtiva() ? displayFile->obterJanelaMundoAtiva()->obterNome() : "");
 
-void MainWindow::on_comboFormas_currentIndexChanged(int index) {
-    if (index < 0) return;
-    QString tipoSelecionado = ui->comboFormas->currentText();
-    gerenciarVisibilidadeSpinners(tipoSelecionado);
-}
-
-void MainWindow::on_btnCor_clicked() {
-    QColor cor = QColorDialog::getColor(corSelecionadaParaDesenho, this, "Selecionar Cor da Forma");
-    if (cor.isValid()) {
-        corSelecionadaParaDesenho = cor;
-        // Poderia ter um preview da cor em um QLabel, por exemplo.
-        // ui->lblPreviewCor->setStyleSheet(QString("background-color: %1").arg(cor.name()));
+    ui->cbDFCameras->clear();
+    if (displayFile) {
+        for (const auto& jm : displayFile->obterListaJanelasMundo()) {
+            if (jm) {
+                ui->cbDFCameras->addItem(jm->obterNome(), QVariant::fromValue(jm->obterNome()));
+            }
+        }
+    }
+    if (!nomeJanelaSelecionadaAnteriormente.isEmpty()) {
+        int idx = ui->cbDFCameras->findText(nomeJanelaSelecionadaAnteriormente);
+        if (idx != -1) {
+            ui->cbDFCameras->setCurrentIndex(idx);
+            // Não chamar on_cbDFCamera_currentIndexChanged aqui para evitar loop
+        } else {
+            janelaSelecionada = nullptr; // Janela não existe mais
+        }
     }
 }
 
+void MainWindow::on_cbDFCamera_currentIndexChanged(int index) {
+    if (index < 0) { // Câmera foi "desselecionada" ou ComboBox limpo
+        janelaSelecionada = nullptr;
+    } else { // Uma câmera foi selecionada
+        if (!displayFile) { // Checagem de segurança
+            janelaSelecionada = nullptr;
+            updateTransformationTargetUIState();
+            return;
+        }
+        QString nomeJanela = ui->cbDFCameras->itemText(index);
+        std::shared_ptr<JanelaMundo> jmSelecionadaTemp = displayFile->buscarJanelaMundo(nomeJanela);
+
+        if (jmSelecionadaTemp) {
+            janelaSelecionada = jmSelecionadaTemp;
+            displayFile->definirJanelaMundoAtiva(janelaSelecionada);
+
+            // Garante que nenhum objeto esteja selecionado para transformação
+            // Bloqueia sinais para evitar chamada recursiva de on_cbDisplayFile_currentIndexChanged
+            bool oldSignalsBlocked = ui->cbDisplayFile->signalsBlocked();
+            ui->cbDisplayFile->blockSignals(true);
+            ui->cbDisplayFile->setCurrentIndex(-1);
+            ui->cbDisplayFile->blockSignals(oldSignalsBlocked);
+
+            // Se um objeto estava selecionado, limpamos a referência interna
+            if(objetoSelecionado != nullptr){
+                objetoSelecionado = nullptr;
+            }
+
+            if (displayFile) displayFile->recalcularTodosPontosSCN(); // Recalcula para a nova câmera ativa
+            if (ui->frameDesenho) ui->frameDesenho->redesenhar();
+        } else {
+            // Câmera não encontrada, trata como desseleção
+            qWarning() << "Câmera não encontrada no cbDFCameras_currentIndexChanged:" << nomeJanela;
+            janelaSelecionada = nullptr;
+        }
+    }
+    updateTransformationTargetUIState(); // Atualiza a UI com base no novo estado de seleção
+}
+
+void MainWindow::on_cbDisplayFile_currentIndexChanged(int index) {
+    if (index < 0) { // Objeto foi "desselecionado" ou ComboBox limpo
+        objetoSelecionado = nullptr;
+    } else { // Um objeto foi selecionado
+        if (!displayFile) { // Checagem de segurança
+            objetoSelecionado = nullptr;
+            updateTransformationTargetUIState();
+            return;
+        }
+        QString nomeObjeto = ui->cbDisplayFile->itemText(index);
+        std::shared_ptr<ObjetoGrafico> objSelecionadoTemp = displayFile->buscarObjeto(nomeObjeto);
+
+        if (objSelecionadoTemp) {
+            objetoSelecionado = objSelecionadoTemp;
+
+            // Garante que nenhuma câmera esteja selecionada para transformação
+            bool oldSignalsBlocked = ui->cbDFCameras->signalsBlocked();
+            ui->cbDFCameras->blockSignals(true);
+            ui->cbDFCameras->setCurrentIndex(-1);
+            ui->cbDFCameras->blockSignals(oldSignalsBlocked);
+
+            // Se uma câmera estava selecionada, limpamos a referência interna
+            if(janelaSelecionada != nullptr){
+                janelaSelecionada = nullptr;
+            }
+        } else {
+            qWarning() << "Objeto não encontrado no cbDisplayFile_currentIndexChanged:" << nomeObjeto;
+            objetoSelecionado = nullptr; // Não encontrou o objeto, trata como desseleção
+        }
+    }
+    updateTransformationTargetUIState(); // Atualiza a UI com base no novo estado de seleção
+}
+
+// --- Slots de Desenho e Exclusão (ajustar para usar janelaMundoAtiva) ---
 void MainWindow::on_btnDesenhar_clicked() {
-    QString nomeFormaBase = "Forma";
-    int count = displayFile ? displayFile->obterObjetos().size() + 1 : 1;
-    QString nomeForma = QString("%1_%2").arg(ui->comboFormas->currentText().left(3)).arg(count); // Nome simples
+    if (!displayFile || !displayFile->obterJanelaMundoAtiva()) {
+        QMessageBox::critical(this, "Erro", "DisplayFile ou Janela Mundo ativa não inicializada.");
+        return;
+    }
 
     QString tipoSelecionado = ui->comboFormas->currentText();
     std::shared_ptr<ObjetoGrafico> novaForma = nullptr;
+    Ponto2D p1(ui->spinX1->value(), ui->spinY1->value()); // Ponto base
 
-    Ponto2D p1(ui->spinX1->value(), ui->spinY1->value());
+    QString nomeFormaBase; // Será definido dentro de cada case
 
+    // Helper lambda para contar objetos de um tipo específico (mesmo de antes)
+    auto obterContagemPorTipo = [&](TipoObjeto tipo, int numVerticesEspecifico = 0) {
+        if (!displayFile) return 0;
+        int contagem = 0;
+        for (const auto& obj : displayFile->obterObjetos()) {
+            if (obj && obj->obterTipo() == tipo) {
+                if (tipo == TipoObjeto::POLIGONO && numVerticesEspecifico > 0) {
+                    if (obj->obterPontosOriginaisMundo().size() == numVerticesEspecifico) {
+                        contagem++;
+                    }
+                } else {
+                    contagem++;
+                }
+            }
+        }
+        return contagem;
+    };
+
+    // Criação do objeto com o nomeFormaBase
     if (tipoSelecionado == "Ponto") {
-        novaForma = std::make_shared<PontoObj>(nomeForma, p1, corSelecionadaParaDesenho);
+        nomeFormaBase = QString("Ponto_%1").arg(obterContagemPorTipo(TipoObjeto::PONTO) + 1);
+        novaForma = std::make_shared<PontoObj>(nomeFormaBase, p1, corSelecionadaParaDesenho);
     } else if (tipoSelecionado == "Reta") {
+        if (!ui->spinX2->isVisible()) { /* ... validação ... */ return; }
         Ponto2D p2(ui->spinX2->value(), ui->spinY2->value());
-        novaForma = std::make_shared<RetaObj>(nomeForma, p1, p2, corSelecionadaParaDesenho);
+        nomeFormaBase = QString("Reta_%1").arg(obterContagemPorTipo(TipoObjeto::RETA) + 1);
+        novaForma = std::make_shared<RetaObj>(nomeFormaBase, p1, p2, corSelecionadaParaDesenho);
     } else if (tipoSelecionado == "Polígono (Triângulo)") {
+        if (!ui->spinX2->isVisible() || !ui->spinX3->isVisible()) { /* ... validação ... */ return; }
         Ponto2D p2(ui->spinX2->value(), ui->spinY2->value());
         Ponto2D p3(ui->spinX3->value(), ui->spinY3->value());
+        nomeFormaBase = QString("Triangulo_%1").arg(obterContagemPorTipo(TipoObjeto::POLIGONO, 3) + 1);
         QList<Ponto2D> vertices = {p1, p2, p3};
-        novaForma = std::make_shared<PoligonoObj>(nomeForma, vertices, corSelecionadaParaDesenho);
+        novaForma = std::make_shared<PoligonoObj>(nomeFormaBase, vertices, corSelecionadaParaDesenho);
     } else if (tipoSelecionado == "Polígono (Quadrado)") {
-        if (!ui->spinX2->isVisible()) { // Checagem de segurança
-            QMessageBox::warning(this, "Entrada Inválida", "Defina o segundo ponto (X2, Y2) para o quadrado.");
-            return;
-        }
-        Ponto2D p2(ui->spinX2->value(), ui->spinY2->value());
-
-        // Vértices do retângulo/quadrado: p1, (x2,y1), p2, (x1,y2)
-        // p1 já está definido como (ui->spinX1->value(), ui->spinY1->value())
-        Ponto2D v1 = p1;
-        Ponto2D v2(p2.obterX(), p1.obterY()); // Canto superior direito ou inferior direito
-        Ponto2D v3 = p2;                     // Canto oposto a v1
-        Ponto2D v4(p1.obterX(), p2.obterY()); // Canto restante
-
+        if (!ui->spinX2->isVisible()) { /* ... validação ... */ return; }
+        Ponto2D p2_diag(ui->spinX2->value(), ui->spinY2->value());
+        nomeFormaBase = QString("Quadrado_%1").arg(obterContagemPorTipo(TipoObjeto::POLIGONO, 4) + 1);
+        Ponto2D v1 = p1; Ponto2D v2(p2_diag.obterX(), p1.obterY());
+        Ponto2D v3 = p2_diag; Ponto2D v4(p1.obterX(), p2_diag.obterY());
         QList<Ponto2D> vertices = {v1, v2, v3, v4};
-        novaForma = std::make_shared<PoligonoObj>(nomeForma, vertices, corSelecionadaParaDesenho);
+        novaForma = std::make_shared<PoligonoObj>(nomeFormaBase, vertices, corSelecionadaParaDesenho);
     } else if (tipoSelecionado == "Circunferência") {
-        if (!ui->spinRaio->isVisible() || ui->spinRaio->value() <= 0) {
-            QMessageBox::warning(this, "Entrada Inválida", "O raio da circunferência deve ser positivo.");
-            return;
-        }
+        if (!ui->spinRaio->isVisible() || ui->spinRaio->value() <= 0) { /* ... validação ... */ return; }
         double raio = ui->spinRaio->value();
-        // p1 já está definido como o centro (ui->spinX1->value(), ui->spinY1->value())
-        novaForma = std::make_shared<CircunferenciaObj>(nomeForma, p1, raio, corSelecionadaParaDesenho);
+        nomeFormaBase = QString("Circulo_%1").arg(obterContagemPorTipo(TipoObjeto::CIRCUNFERENCIA) + 1);
+        novaForma = std::make_shared<CircunferenciaObj>(nomeFormaBase, p1, raio, corSelecionadaParaDesenho);
     }
 
+    if (novaForma) {
+        // Usa a nova função para gerar o nome completo e definir no objeto
+        QString nomeFinal = gerarNomeFormatadoParaObjeto(nomeFormaBase, novaForma, corSelecionadaParaDesenho);
+        novaForma->definirNome(nomeFinal);
 
-    if (novaForma && displayFile && ui->frameDesenho && ui->frameDesenho->obterJanelaMundo()) {
-        // Recalcular pontos SCN para o novo objeto antes de adicionar.
-        novaForma->recalcularPontosTransformados(ui->frameDesenho->obterJanelaMundo()->obterMatrizNormalizacao());
+        novaForma->recalcularPontosTransformados(displayFile->obterJanelaMundoAtiva()->obterMatrizNormalizacao());
         displayFile->adicionarObjeto(novaForma);
+
         atualizarCbDisplayFile();
-        ui->frameDesenho->redesenhar();
-        ui->cbDisplayFile->setCurrentText(novaForma->obterNome()); // Seleciona o objeto recém-adicionado
+
+        ui->cbDisplayFile->setCurrentIndex(-1);
+
+        if (ui->frameDesenho) ui->frameDesenho->redesenhar();
+
     } else {
-        if(!ui->frameDesenho || !ui->frameDesenho->obterJanelaMundo()){
-            QMessageBox::critical(this, "Erro", "Frame de desenho ou Janela Mundo não inicializada.");
+        if (tipoSelecionado.isEmpty()){
+            QMessageBox::warning(this, "Seleção Inválida", "Nenhuma forma selecionada para desenhar.");
+        } else {
+            QMessageBox::critical(this, "Erro Interno", "Não foi possível criar a forma selecionada.");
         }
     }
+}
+
+QString MainWindow::tipoObjetoParaStringUI(TipoObjeto tipo, int numPontos) {
+    switch (tipo) {
+    case TipoObjeto::PONTO: return "Ponto";
+    case TipoObjeto::RETA: return "Reta";
+    case TipoObjeto::POLIGONO:
+        if (numPontos == 3) return "Polígono (Triângulo)";
+        if (numPontos == 4) return "Polígono (Quadrado)";
+        // Adicione mais casos se tiver outros tipos de polígonos específicos na UI
+        return "Polígono"; // Fallback para outros polígonos
+    case TipoObjeto::CIRCUNFERENCIA: return "Circunferência";
+    default: return "";
+    }
+}
+
+void MainWindow::atualizarObjetoComDadosDaUI(std::shared_ptr<ObjetoGrafico>& objeto) {
+    if (!objeto) return;
+
+    TipoObjeto tipo = objeto->obterTipo(); // O tipo é do objeto que está sendo modificado/criado
+
+    // 1. Obter novas coordenadas/raio dos campos da UI e definir no objeto
+    if (tipo == TipoObjeto::PONTO) {
+        Ponto2D p(ui->spinX1->value(), ui->spinY1->value());
+        objeto->definirPontosOriginaisMundo({p}); // Define a lista de pontos
+    } else if (tipo == TipoObjeto::RETA) {
+        Ponto2D p1(ui->spinX1->value(), ui->spinY1->value());
+        Ponto2D p2(ui->spinX2->value(), ui->spinY2->value());
+        objeto->definirPontosOriginaisMundo({p1, p2});
+    } else if (tipo == TipoObjeto::POLIGONO) {
+        QList<Ponto2D> novosPontos;
+        // A lógica aqui precisa ser consistente com como os spinners são preenchidos
+        // em on_cbDisplayFile_currentIndexChanged para o tipo de polígono selecionado.
+        // Se for um triângulo e X1-Y3 estão visíveis e preenchidos:
+        if (tipoObjetoParaStringUI(tipo, objeto->obterPontosOriginaisMundo().size()) == "Polígono (Triângulo)") {
+            novosPontos << Ponto2D(ui->spinX1->value(), ui->spinY1->value())
+            << Ponto2D(ui->spinX2->value(), ui->spinY2->value())
+            << Ponto2D(ui->spinX3->value(), ui->spinY3->value());
+        }
+        // Se for um quadrado e X1/Y1 (canto1) e X2/Y2 (canto oposto) estão visíveis:
+        else if (tipoObjetoParaStringUI(tipo, objeto->obterPontosOriginaisMundo().size()) == "Polígono (Quadrado)") {
+            Ponto2D c1(ui->spinX1->value(), ui->spinY1->value());
+            Ponto2D c3_oposto(ui->spinX2->value(), ui->spinY2->value());
+            novosPontos << c1 << Ponto2D(c3_oposto.obterX(), c1.obterY())
+                        << c3_oposto << Ponto2D(c1.obterX(), c3_oposto.obterY());
+        } else { // Fallback ou outros polígonos (a UI precisa suportar)
+            // Se a UI só tem X1-Y3, só podemos atualizar os 3 primeiros pontos.
+            // Isso é uma simplificação; uma edição de polígono real é mais complexa.
+            QList<Ponto2D> pontosAtuais = objeto->obterPontosOriginaisMundo();
+            novosPontos = pontosAtuais; // Começa com os pontos existentes
+            if (novosPontos.size() >= 1 && ui->spinX1->isVisible()) { novosPontos[0].definirX(ui->spinX1->value()); novosPontos[0].definirY(ui->spinY1->value());}
+            if (novosPontos.size() >= 2 && ui->spinX2->isVisible()) { novosPontos[1].definirX(ui->spinX2->value()); novosPontos[1].definirY(ui->spinY2->value());}
+            if (novosPontos.size() >= 3 && ui->spinX3->isVisible()) { novosPontos[2].definirX(ui->spinX3->value()); novosPontos[2].definirY(ui->spinY3->value());}
+        }
+        objeto->definirPontosOriginaisMundo(novosPontos);
+    } else if (tipo == TipoObjeto::CIRCUNFERENCIA) {
+        auto circulo = std::dynamic_pointer_cast<CircunferenciaObj>(objeto);
+        if (circulo) {
+            Ponto2D novoCentro(ui->spinX1->value(), ui->spinY1->value());
+            double novoRaio = ui->spinRaio->value();
+            if (novoRaio <= 0) {
+                QMessageBox::warning(this, "Raio Inválido", "O raio da circunferência deve ser positivo. Alteração não aplicada.");
+                return;
+            }
+            circulo->definirCentroOriginal(novoCentro); // Atualiza o centro
+            circulo->definirRaioOriginal(novoRaio);   // Atualiza o raio (isso deve chamar gerarPontosAproximacao)
+        }
+    }
+
+    // 2. Atualizar cor do objeto
+    objeto->definirCor(corSelecionadaParaDesenho); // corSelecionadaParaDesenho é membro de MainWindow
+}
+
+void MainWindow::on_btnModificarForma_clicked() {
+    if (!objetoSelecionado || !displayFile || !displayFile->obterJanelaMundoAtiva()) {
+        QMessageBox::warning(this, "Modificar Forma", "Nenhuma forma selecionada ou sistema não inicializado.");
+        return;
+    }
+
+    // 1. Preservar o nome base original do objeto
+    QString nomeCompletoAtual = objetoSelecionado->obterNome();
+    QString nomeBase = nomeCompletoAtual.section(" => ", 0, 0);
+    if (nomeBase.isEmpty() || !nomeCompletoAtual.contains(" => ")) {
+        // Fallback se o nome não estiver no formato esperado
+        // Você pode querer uma lógica mais robusta aqui para extrair/manter o identificador único
+        nomeBase = tipoObjetoParaStringUI(objetoSelecionado->obterTipo(), objetoSelecionado->obterPontosOriginaisMundo().size()) + "_modificado";
+        qWarning() << "Não foi possível extrair nome base de: " << nomeCompletoAtual << ". Usando fallback: " << nomeBase;
+    }
+
+    // 2. Atualizar as propriedades do objeto (geométricas e cor) com os dados da UI
+    atualizarObjetoComDadosDaUI(objetoSelecionado);
+
+    // 3. Recalcular pontos SCN do objeto modificado
+    objetoSelecionado->recalcularPontosTransformados(displayFile->obterJanelaMundoAtiva()->obterMatrizNormalizacao());
+
+    // 4. Gerar e definir o novo nome formatado
+    QString nomeNovoFormatado = gerarNomeFormatadoParaObjeto(nomeBase, objetoSelecionado, corSelecionadaParaDesenho);
+    objetoSelecionado->definirNome(nomeNovoFormatado);
+
+    // 5. Atualizar o ComboBox e redesenhar a cena
+    // int indiceSelecionadoOriginal = ui->cbDisplayFile->currentIndex(); // Não é mais necessário com a busca pelo nome
+
+    atualizarCbDisplayFile(); // Limpa e recarrega o ComboBox
+
+    // Tenta encontrar e re-selecionar o item (agora possivelmente com novo nome)
+    int novoIndiceParaSelecionar = ui->cbDisplayFile->findText(nomeNovoFormatado);
+    ui->cbDisplayFile->setCurrentIndex(novoIndiceParaSelecionar);
+    // Se não encontrar (novoIndiceParaSelecionar == -1), a seleção será removida,
+    // o que é o comportamento correto e acionará on_cbDisplayFile_currentIndexChanged(-1).
+
+    if (ui->frameDesenho) {
+        ui->frameDesenho->redesenhar();
+    }
+    // QMessageBox::information(this, "Modificar Forma", "Forma modificada."); // Opcional
 }
 
 void MainWindow::on_btnExcluirForma_clicked() {
@@ -243,225 +468,298 @@ void MainWindow::on_btnExcluirForma_clicked() {
     }
     if (displayFile) {
         displayFile->removerObjeto(objetoSelecionado->obterNome());
-        objetoSelecionado = nullptr; // Desseleciona
-        atualizarCbDisplayFile();
-        if (ui->frameDesenho) {
-            ui->frameDesenho->redesenhar();
-        }
-        ui->tabWidget->setEnabled(false); // Desabilita abas de transformação
+        // objetoSelecionado será definido como nullptr por on_cbDisplayFile_currentIndexChanged
+
+        atualizarCbDisplayFile(); // Atualiza a lista no ComboBox
+
+        // Garante que nada esteja selecionado após a exclusão
+        ui->cbDisplayFile->setCurrentIndex(-1);
+        // Isso irá disparar on_cbDisplayFile_currentIndexChanged(-1) para atualizar os botões
+
+        if (ui->frameDesenho) ui->frameDesenho->redesenhar();
     }
 }
 
-void MainWindow::on_btnCarregarOBJ_clicked() {
-    // Placeholder: Carregamento de arquivos .obj é tipicamente para 3D.
-    // Para 2D, poderia ser um formato de texto simples:
-    // TIPO NOME X1 Y1 [X2 Y2 X3 Y3 ...] [R G B]
-    QString caminhoArquivo = QFileDialog::getOpenFileName(this, "Carregar Descrição de Cena 2D", "", "Arquivos de Texto (*.txt);;Todos os Arquivos (*)");
-    if (caminhoArquivo.isEmpty()) {
-        return;
-    }
-    QFile arquivo(caminhoArquivo);
-    if (!arquivo.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QMessageBox::warning(this, "Erro ao Carregar", "Não foi possível abrir o arquivo: " + arquivo.errorString());
-        return;
-    }
-    QTextStream in(&arquivo);
-    // TODO: Lógica para parsear o arquivo e criar objetos.
-    // Exemplo de linha: PONTO P1 10 20 255 0 0
-    //                 RETA R1 0 0 50 50 0 255 0
-    //                 POLIGONO PG1 0 0 10 0 5 10 0 0 255 (3 vértices)
-    arquivo.close();
-    atualizarCbDisplayFile();
-    if(ui->frameDesenho) ui->frameDesenho->redesenhar();
-    QMessageBox::information(this, "Carregar", "Funcionalidade de carregar arquivo ainda não implementada completamente.");
-}
-
-void MainWindow::on_cbDisplayFile_currentIndexChanged(int index) {
-    if (index < 0 || !displayFile) {
-        objetoSelecionado = nullptr;
-        ui->tabWidget->setEnabled(false);
-        return;
-    }
-    QString nomeObjeto = ui->cbDisplayFile->itemText(index);
-    objetoSelecionado = displayFile->buscarObjeto(nomeObjeto);
-    ui->tabWidget->setEnabled(objetoSelecionado != nullptr);
-
-    // Resetar controles de transformação para o estado do objeto selecionado (ou para default)
-    // Por ora, vamos resetar para valores neutros.
-    // Se quiser que os controles reflitam o estado do objeto, é mais complexo.
-    if (objetoSelecionado) {
-        ui->spinTranslacaoX->setValue(0); // Idealmente, o acumulado do objeto
-        ui->spinTranslacaoY->setValue(0);
-        ui->hsEscalaX->setValue(0); // 0 no slider = fator 1x
-        ui->hsEscalaY->setValue(0);
-        ui->hsRotacaoX->setValue(0);
-    }
-}
-
-
-// --- Slots para Transformações ---
+// --- Slots para Transformações (Modificados) ---
 
 void MainWindow::aplicarTranslacaoAtual() {
-    if (!objetoSelecionado || !ui->frameDesenho || !ui->frameDesenho->obterJanelaMundo()) return;
+    if (!ui->tabWidget->isEnabled()) return; // Se as transformações não estiverem habilitadas, não faz nada
 
     double dx = ui->spinTranslacaoX->value();
     double dy = ui->spinTranslacaoY->value();
 
-    // A translação aqui é absoluta a partir da última posição do objeto
-    // Se for para ser incremental a cada mudança no spinbox:
-    // 1. Guardar a última matriz de transformação do objeto antes desta operação.
-    // 2. Calcular a matriz de translação com dx, dy.
-    // 3. Aplicar T * M_ultima_guardada.
-    // Por simplicidade, vamos assumir que spinTranslacaoX/Y definem uma NOVA translação
-    // que é combinada com a matriz de transformação atual do objeto.
-    // Para um comportamento de "arrastar", os valores de dx, dy deveriam ser incrementais.
-    // A UI com spinbox sugere valores diretos.
-    // Se os spinboxes fossem para definir a POSIÇÃO final, seria diferente.
-    // Como está, cada mudança aplica uma translação ADICIONAL com os valores atuais.
-    // Isso pode ser confuso.
-    // Uma abordagem melhor: ter um botão "Aplicar Translação" ou
-    // os spin boxes representam a translação *total* a ser aplicada a partir de um estado "resetado".
+    if (objetoSelecionado && displayFile && displayFile->obterJanelaMundoAtiva()) {
+        // Transformar OBJETO SELECIONADO
+        Matriz T = TransformadorGeometrico::translacao(dx, dy);
+        objetoSelecionado->aplicarTransformacao(T);
+        objetoSelecionado->recalcularPontosTransformados(displayFile->obterJanelaMundoAtiva()->obterMatrizNormalizacao());
+        // O nome do objeto não muda com transformações geométricas, apenas com edição de coordenadas/cor
+    } else if (janelaSelecionada && displayFile) {
+        // Transformar CÂMERA SELECIONADA
+        janelaSelecionada->deslocar(dx, dy);
+        displayFile->recalcularTodosPontosSCN(); // Recalcula SCN de todos os objetos para a nova câmera
+    } else {
+        return; // Nenhum alvo válido para transformação
+    }
 
-    // Solução mais simples para agora: aplicar a translação (dx, dy) à matriz atual.
-    // Se o usuário mudar o valor novamente, aplicará outra translação.
-    // Para evitar acumulação excessiva a cada valueChanged,
-    // pode-se aplicar a transformação apenas quando o usuário para de editar (editingFinished).
-    // Ou, a cada mudança, resetar a transformação específica (translação) do objeto e aplicar a nova total.
+    if (ui->frameDesenho) ui->frameDesenho->redesenhar();
 
-    // Para este exemplo, cada mudança no spinbox aplica uma nova translação (dx, dy)
-    // à matriz de transformação acumulada do objeto.
-    Matriz T = TransformadorGeometrico::translacao(dx, dy);
-    objetoSelecionado->aplicarTransformacao(T);
-    objetoSelecionado->recalcularPontosTransformados(ui->frameDesenho->obterJanelaMundo()->obterMatrizNormalizacao());
-    ui->frameDesenho->redesenhar();
-
-    // Para que os spinboxes não acumulem indefinidamente ao aplicar:
-    // Poderia resetá-los para 0 APÓS aplicar, indicando que a translação (dx,dy) foi "consumida".
-    // ui->spinTranslacaoX->setValue(0);
-    // ui->spinTranslacaoY->setValue(0);
-    // Mas isso impede o usuário de ajustar finamente.
-    // A melhor forma é ter um botão "Aplicar" ou os spinboxes representarem o estado final desejado.
+    // Opcional: resetar os valores de dx, dy nos spinboxes se forem incrementais
+    ui->spinTranslacaoX->setValue(0);
+    ui->spinTranslacaoY->setValue(0);
 }
 
-void MainWindow::on_spinTranslacaoX_valueChanged(double arg1) {
-    Q_UNUSED(arg1);
-    aplicarTranslacaoAtual(); // Ou conectar ao signal editingFinished()
+void MainWindow::on_spinTranslacaoX_valueChanged(double /*arg1*/) {
+    aplicarTranslacaoAtual();
 }
 
-void MainWindow::on_spinTranslacaoY_valueChanged(double arg1) {
-    Q_UNUSED(arg1);
-    aplicarTranslacaoAtual(); // Ou conectar ao signal editingFinished()
+void MainWindow::on_spinTranslacaoY_valueChanged(double /*arg1*/) {
+    aplicarTranslacaoAtual();
 }
-
 
 void MainWindow::aplicarEscalaAtual() {
-    if (!objetoSelecionado || !ui->frameDesenho || !ui->frameDesenho->obterJanelaMundo()) return;
+    if (!ui->tabWidget->isEnabled()) return;
 
-    // Mapear valor do slider (-10 a 10) para fator de escala.
-    // Slider = 0  -> fator 1.0 (sem escala)
-    // Slider > 0 -> fator > 1.0 (aumentar)
-    // Slider < 0 -> fator < 1.0 (diminuir)
     double valX = ui->hsEscalaX->value();
-    double valY = ui->hsEscalaY->value();
+    double valY = ui->hsEscalaY->value(); // Usado para objeto, para câmera podemos usar só X
 
-    double sx = 1.0 + (valX / 20.0); // Ex: -10 -> 0.5x; 0 -> 1x; 10 -> 1.5x. Ajustar faixa conforme desejado.
-    double sy = 1.0 + (valY / 20.0); // Se valX/Y for -20, sx/y seria 0, o que colapsa o objeto.
-    // Garantir que sx, sy > 0.
-    sx = std::max(0.1, sx); // Mínimo de 0.1x
-    sy = std::max(0.1, sy);
+    if (objetoSelecionado && displayFile && displayFile->obterJanelaMundoAtiva()) {
+        // Escalar OBJETO SELECIONADO
+        double sx = 1.0 + (valX / 20.0); sx = std::max(0.1, sx);
+        double sy = 1.0 + (valY / 20.0); sy = std::max(0.1, sy);
+        Ponto2D centro = objetoSelecionado->calcularCentroGeometrico();
+        Matriz S = TransformadorGeometrico::escala(sx, sy, centro);
+        objetoSelecionado->aplicarTransformacao(S);
+        objetoSelecionado->recalcularPontosTransformados(displayFile->obterJanelaMundoAtiva()->obterMatrizNormalizacao());
+    } else if (janelaSelecionada && displayFile) {
+        // Escalar (Zoom) CÂMERA SELECIONADA
+        double fatorZoom = 1.0 + (valX / 10.0); // Exemplo: slider X controla zoom
+        fatorZoom = std::max(0.1, fatorZoom);
+        janelaSelecionada->zoom(fatorZoom);
+        displayFile->recalcularTodosPontosSCN();
+    } else {
+        return; // Nenhum alvo válido
+    }
 
-    // A escala é em torno do centro geométrico do objeto.
-    Ponto2D centro = objetoSelecionado->calcularCentroGeometrico();
-    Matriz S = TransformadorGeometrico::escala(sx, sy, centro);
-
-    // IMPORTANTE: Como aplicar? Se aplicarmos S diretamente à matriz acumulada,
-    // a escala será relativa ao estado JÁ escalado.
-    // Se quisermos que os sliders definam a escala TOTAL em relação ao original:
-    // 1. Obter a matriz de transformação do objeto SEM a última escala.
-    // 2. Aplicar a nova escala.
-    // Isto é complexo de gerenciar.
-
-    // Abordagem mais simples (e comum para sliders):
-    // Os sliders controlam uma escala *adicional* ou *total* relativa a um estado.
-    // Para este exemplo, vamos aplicar a escala S à matriz acumulada.
-    // O usuário deve estar ciente que é acumulativo.
-    // Para um controle mais fino, seria melhor ter um botão "Aplicar Escala" e
-    // os sliders/spinboxes definem a escala para *essa* operação.
-
-    // Solução: Armazenar a matriz de transformação "base" do objeto (antes de T,S,R desta UI)
-    // e reconstruir a matriz total: M_total = M_trans_ui * M_escala_ui * M_rot_ui * M_base.
-    // Isso é mais robusto mas requer mais gerenciamento de estado.
-
-    // Por ora, vamos aplicar incrementalmente, mas isso é menos intuitivo para sliders.
-    // ALTERNATIVA: Resetar a escala do objeto para 1,1 antes de aplicar a nova.
-    // Isso requer decompor a matriz do objeto, o que não é trivial.
-
-    // Vamos tentar uma abordagem onde os sliders definem a escala *total* do objeto.
-    // Isso significa que precisamos de uma forma de "resetar" a escala anterior do objeto
-    // e aplicar a nova.
-    // Uma forma simplificada (mas não perfeita):
-    // Se o objeto tem uma matriz de escala S_antiga e queremos aplicar uma nova S_nova (dos sliders)
-    // de forma que a escala final seja S_nova, precisamos aplicar S_nova * Inversa(S_antiga).
-    // Isso é complexo.
-
-    // Mais simples: cada mudança no slider aplica uma PEQUENA escala incremental.
-    // Isso é mais para botões "+/-" do que para sliders que definem um estado.
-
-    // Ação para agora: os sliders definem uma escala que é aplicada.
-    // Para que isso funcione como "estado final", a matriz de transformação do objeto
-    // precisaria ser reconstruída a partir dos valores dos sliders + translação + rotação.
-    // Esta é a abordagem MVC mais correta.
-
-    // Reconstruir a matriz de transformação do objeto a partir dos valores atuais dos controles de UI:
-    // (Assumindo que os valores de translação e rotação também são mantidos de forma similar)
-    // Matriz M_obj_nova = Matriz_Translacao_UI * Matriz_Escala_UI * Matriz_Rotacao_UI;
-    // objetoSelecionado->setMatrizTransformacao(M_obj_nova); // Precisaria de um setter.
-
-    // Para o comportamento mais direto com o código atual:
-    // O slider aplica uma escala. Se o usuário move de 0 para 1 e depois para 2,
-    // ele aplica Escala(f(1)) e depois Escala(f(2)) sobre o resultado anterior.
-    // Isso não é o ideal para sliders que representam um estado.
-
-    // Ação: Aplicar a escala (sx, sy) em relação ao estado atual.
-    // Isso é o que o código `aplicarTransformacao` já faz (multiplica pela matriz atual).
-    // O usuário precisará resetar o slider para 0 para voltar à escala "anterior" antes desta operação.
-    objetoSelecionado->aplicarTransformacao(S);
-    objetoSelecionado->recalcularPontosTransformados(ui->frameDesenho->obterJanelaMundo()->obterMatrizNormalizacao());
-    ui->frameDesenho->redesenhar();
+    if (ui->frameDesenho) ui->frameDesenho->redesenhar();
 }
 
-
-void MainWindow::on_hsEscalaX_valueChanged(int value) {
-    Q_UNUSED(value);
-    // Para sliders, é comum aplicar a transformação quando o slider é liberado (sliderReleased)
-    // ou ter um botão "Aplicar". Aplicar em valueChanged pode ser pesado e levar a múltiplas transformações.
-    // Para este exemplo, vamos aplicar em valueChanged.
+void MainWindow::on_hsEscalaX_valueChanged(int /*value*/) {
     aplicarEscalaAtual();
 }
 
-void MainWindow::on_hsEscalaY_valueChanged(int value) {
-    Q_UNUSED(value);
+void MainWindow::on_hsEscalaY_valueChanged(int /*value*/) {
     aplicarEscalaAtual();
 }
 
 void MainWindow::aplicarRotacaoAtual() {
-    if (!objetoSelecionado || !ui->frameDesenho || !ui->frameDesenho->obterJanelaMundo()) return;
+    if (!ui->tabWidget->isEnabled()) return;
 
-    double angulo = ui->hsRotacaoX->value(); // Usando hsRotacaoX para rotação 2D.
+    double anguloGraus = ui->hsRotacaoX->value();
 
-    // Rotação em torno do centro geométrico do objeto.
-    Ponto2D centro = objetoSelecionado->calcularCentroGeometrico();
-    Matriz R = TransformadorGeometrico::rotacao(angulo, centro);
+    if (objetoSelecionado && displayFile && displayFile->obterJanelaMundoAtiva()) {
+        // Rotacionar OBJETO SELECIONADO
+        Ponto2D pivo = objetoSelecionado->calcularCentroGeometrico();
+        // Assumindo que sua Matriz::rotacao ou TransformadorGeometrico::rotacao espera graus ou você converte
+        Matriz R = TransformadorGeometrico::rotacao(anguloGraus, pivo); // Se esperar radianos: qDegreesToRadians(anguloGraus)
+        objetoSelecionado->aplicarTransformacao(R);
+        objetoSelecionado->recalcularPontosTransformados(displayFile->obterJanelaMundoAtiva()->obterMatrizNormalizacao());
+    } else if (janelaSelecionada && displayFile) {
+        // Rotacionar CÂMERA SELECIONADA
+        janelaSelecionada->rotacionar(anguloGraus); // Lembre-se que a implementação visual disso é complexa
+        displayFile->recalcularTodosPontosSCN();
+        qDebug() << "Tentativa de rotacionar câmera: " << janelaSelecionada->obterNome() << " por " << anguloGraus << " graus.";
+    } else {
+        return; // Nenhum alvo válido
+    }
 
-    // Similar à Escala, a forma como a rotação é aplicada (acumulativa vs. estado final) é importante.
-    // Por consistência com a aplicação de escala acima, será acumulativa.
-    objetoSelecionado->aplicarTransformacao(R);
-    objetoSelecionado->recalcularPontosTransformados(ui->frameDesenho->obterJanelaMundo()->obterMatrizNormalizacao());
-    ui->frameDesenho->redesenhar();
+    if (ui->frameDesenho) ui->frameDesenho->redesenhar();
 }
 
-void MainWindow::on_hsRotacaoX_valueChanged(int value) {
-    Q_UNUSED(value);
-    // Considerar usar sliderReleased para rotação também.
+void MainWindow::on_hsRotacaoX_valueChanged(int /*value*/) {
     aplicarRotacaoAtual();
 }
+
+// ... restante do mainwindow.cpp (on_btnCor_clicked, on_btnCarregarOBJ_clicked, etc.)
+// Mantenha-os como estão, a menos que precisem de lógica relacionada à janela ativa.
+// Por exemplo, on_btnCarregarOBJ_clicked não parece precisar de mudanças imediatas para esta funcionalidade.
+
+void MainWindow::on_btnCor_clicked() {
+    QColor cor = QColorDialog::getColor(corSelecionadaParaDesenho, this, "Selecionar Cor da Forma");
+    if (cor.isValid()) {
+        corSelecionadaParaDesenho = cor;
+        // Se um objeto estiver selecionado, poderia aplicar a cor a ele diretamente
+        if (objetoSelecionado) {
+            objetoSelecionado->definirCor(corSelecionadaParaDesenho);
+            if (ui->frameDesenho) ui->frameDesenho->redesenhar();
+        }
+    }
+}
+
+void MainWindow::on_comboFormas_currentIndexChanged(int index) {
+    if (index < 0) return; // Proteção contra índice inválido
+    QString tipoSelecionado = ui->comboFormas->currentText();
+    gerenciarVisibilidadeSpinners(tipoSelecionado);
+}
+
+QString MainWindow::gerarNomeFormatadoParaObjeto(const QString& nomeBase,
+                                                 std::shared_ptr<ObjetoGrafico> objeto,
+                                                 const QColor& cor) {
+    if (!objeto) {
+        return nomeBase; // Retorna o nome base se o objeto for inválido por algum motivo
+    }
+
+    QString coordenadasStr = "Coordenadas Indisponíveis"; // Valor padrão
+    QString corStr = cor.name(QColor::HexRgb); // Formato ex: #RRGGBB
+
+    TipoObjeto tipo = objeto->obterTipo();
+    const QList<Ponto2D>& pontosOriginais = objeto->obterPontosOriginaisMundo();
+
+    if (tipo == TipoObjeto::PONTO) {
+        if (!pontosOriginais.isEmpty()) {
+            const Ponto2D& p = pontosOriginais.first();
+            coordenadasStr = QString("(%1, %2)").arg(p.obterX()).arg(p.obterY());
+        }
+    } else if (tipo == TipoObjeto::RETA) {
+        if (pontosOriginais.size() >= 2) {
+            const Ponto2D& p1 = pontosOriginais[0];
+            const Ponto2D& p2 = pontosOriginais[1];
+            coordenadasStr = QString("(%1, %2) a (%3, %4)")
+                                 .arg(p1.obterX()).arg(p1.obterY())
+                                 .arg(p2.obterX()).arg(p2.obterY());
+        }
+    } else if (tipo == TipoObjeto::POLIGONO) {
+        if (pontosOriginais.size() == 3) { // Triângulo
+            coordenadasStr = QString("(%1,%2), (%3,%4), (%5,%6)")
+                                 .arg(pontosOriginais[0].obterX()).arg(pontosOriginais[0].obterY())
+                                 .arg(pontosOriginais[1].obterX()).arg(pontosOriginais[1].obterY())
+                                 .arg(pontosOriginais[2].obterX()).arg(pontosOriginais[2].obterY());
+        } else if (pontosOriginais.size() == 4) { // Quadrado/Retângulo
+            // Assume que os pontos já estão na ordem correta no objeto
+            coordenadasStr = QString("(%1,%2), (%3,%4), (%5,%6), (%7,%8)")
+                                 .arg(pontosOriginais[0].obterX()).arg(pontosOriginais[0].obterY())
+                                 .arg(pontosOriginais[1].obterX()).arg(pontosOriginais[1].obterY())
+                                 .arg(pontosOriginais[2].obterX()).arg(pontosOriginais[2].obterY())
+                                 .arg(pontosOriginais[3].obterX()).arg(pontosOriginais[3].obterY());
+        } else if (!pontosOriginais.isEmpty()){ // Outros polígonos
+            coordenadasStr = QStringLiteral("%1 Vértices: ").arg(pontosOriginais.size());
+            for(int i = 0; i < qMin(pontosOriginais.size(), 2); ++i) { // Exibe os 2 primeiros pontos
+                coordenadasStr += QString("(%1,%2) ").arg(pontosOriginais[i].obterX()).arg(pontosOriginais[i].obterY());
+            }
+            if(pontosOriginais.size() > 2) coordenadasStr += "...";
+        }
+    } else if (tipo == TipoObjeto::CIRCUNFERENCIA) {
+        // Para obter o centro e raio originais, precisamos fazer um cast
+        // e assumir que CircunferenciaObj armazena esses dados.
+        auto circulo = std::dynamic_pointer_cast<CircunferenciaObj>(objeto);
+        if (circulo) {
+            // Supondo que CircunferenciaObj tenha métodos para obter centro e raio originais
+            // Se não tiver, você precisará adicioná-los ou passar os dados de outra forma.
+            // No seu código anterior, CircunferenciaObj era criado com um Ponto2D (centro) e um double (raio).
+            // Vamos assumir que eles são acessíveis.
+            // Por agora, vamos pegar o primeiro ponto original como centro se disponível
+            // e o raio precisaria ser recuperado do objeto CircunferenciaObj.
+            // Esta parte pode precisar de ajuste dependendo da sua classe CircunferenciaObj.
+            if (!pontosOriginais.isEmpty()) { // O centro pode estar aqui
+                Ponto2D centro = circulo->obterCentroOriginal(); // NECESSÁRIO: Adicionar este método a CircunferenciaObj
+                double raio = circulo->obterRaioOriginal();   // NECESSÁRIO: Adicionar este método a CircunferenciaObj
+                coordenadasStr = QString("Centro(%1, %2), Raio(%3)")
+                                     .arg(centro.obterX()).arg(centro.obterY()).arg(raio);
+            } else {
+                coordenadasStr = "Dados da Circunferência Incompletos";
+            }
+        }
+    }
+
+    return QString("%1 => %2 - %3")
+        .arg(nomeBase)
+        .arg(coordenadasStr)
+        .arg(corStr);
+}
+
+void MainWindow::updateTransformationTargetUIState() {
+    bool objectIsSelected = (objetoSelecionado != nullptr);
+    bool cameraIsSelected = (janelaSelecionada != nullptr);
+
+    // Definir qual é o alvo ativo para as transformações (T,S,R)
+    // Se um objeto está selecionado, ele é o alvo. Senão, se uma câmera está selecionada, ela é o alvo.
+    bool transformTargetIsObject = objectIsSelected;
+    bool transformTargetIsCamera = !objectIsSelected && cameraIsSelected;
+
+    // Visibilidade dos botões Adicionar/Modificar/Excluir (ligada à seleção de OBJETOS)
+    ui->btnDesenhar->setVisible(!objectIsSelected);
+    ui->btnModificarForma->setVisible(objectIsSelected);
+    ui->btnExcluirForma->setVisible(objectIsSelected);
+
+    // Habilitar/Desabilitar abas de transformação (T,S,R)
+    ui->tabWidget->setEnabled(transformTargetIsObject || transformTargetIsCamera);
+
+    if (transformTargetIsObject) {
+        // Objeto é o alvo: popular campos de edição com dados do objeto
+        TipoObjeto tipo = objetoSelecionado->obterTipo();
+        const QList<Ponto2D>& pontos = objetoSelecionado->obterPontosOriginaisMundo();
+
+        // Atualiza visibilidade dos spinners (X1, Raio, etc.)
+        gerenciarVisibilidadeSpinners(tipoObjetoParaStringUI(tipo, pontos.size()));
+
+        // Preenche os valores dos spinners
+        if (tipo == TipoObjeto::PONTO && !pontos.isEmpty()) {
+            ui->spinX1->setValue(pontos[0].obterX()); ui->spinY1->setValue(pontos[0].obterY());
+        } else if (tipo == TipoObjeto::RETA && pontos.size() >= 2) {
+            ui->spinX1->setValue(pontos[0].obterX()); ui->spinY1->setValue(pontos[0].obterY());
+            ui->spinX2->setValue(pontos[1].obterX()); ui->spinY2->setValue(pontos[1].obterY());
+        } else if (tipo == TipoObjeto::POLIGONO) {
+            // Preenche os spinners visíveis com os dados dos pontos do polígono
+            if (pontos.size() >= 1 && ui->spinX1->isVisible()) { ui->spinX1->setValue(pontos[0].obterX()); ui->spinY1->setValue(pontos[0].obterY()); } else { ui->spinX1->setValue(0); ui->spinY1->setValue(0); }
+            if (pontos.size() >= 2 && ui->spinX2->isVisible()) { ui->spinX2->setValue(pontos[1].obterX()); ui->spinY2->setValue(pontos[1].obterY()); } else { ui->spinX2->setValue(0); ui->spinY2->setValue(0); }
+            if (pontos.size() >= 3 && ui->spinX3->isVisible()) { ui->spinX3->setValue(pontos[2].obterX()); ui->spinY3->setValue(pontos[2].obterY()); } else { ui->spinX3->setValue(0); ui->spinY3->setValue(0); }
+        } else if (tipo == TipoObjeto::CIRCUNFERENCIA) {
+            auto circulo = std::dynamic_pointer_cast<CircunferenciaObj>(objetoSelecionado);
+            if (circulo) {
+                ui->spinX1->setValue(circulo->obterCentroOriginal().obterX());
+                ui->spinY1->setValue(circulo->obterCentroOriginal().obterY());
+                ui->spinRaio->setValue(circulo->obterRaioOriginal());
+            } else { /* Fallback: limpar spinners */ ui->spinX1->setValue(0); ui->spinY1->setValue(0); ui->spinRaio->setValue(0); }
+        }
+        corSelecionadaParaDesenho = objetoSelecionado->obterCor();
+        // Ex: ui->lblPreviewCor->setStyleSheet(QString("background-color: %1").arg(corSelecionadaParaDesenho.name()));
+    } else if (transformTargetIsCamera) {
+        // Câmera é o alvo: os spinners de geometria (X1, Raio) não se aplicam diretamente à câmera
+        // Mantém a visibilidade dos spinners para adicionar NOVAS formas.
+        gerenciarVisibilidadeSpinners(ui->comboFormas->currentText());
+    } else { // Nenhum alvo de transformação selecionado
+        // Mantém a visibilidade dos spinners para adicionar NOVAS formas.
+        gerenciarVisibilidadeSpinners(ui->comboFormas->currentText());
+        // Limpar campos de entrada de coordenadas se não houver seleção de objeto
+        ui->spinX1->setValue(0); ui->spinY1->setValue(0);
+        ui->spinX2->setValue(0); ui->spinY2->setValue(0);
+        ui->spinX3->setValue(0); ui->spinY3->setValue(0);
+        ui->spinRaio->setValue(0);
+    }
+
+    // Resetar controles de Translação, Escala, Rotação (T,S,R)
+    // pois eles geralmente representam uma ação a ser aplicada, não um estado fixo do objeto/câmera
+    ui->spinTranslacaoX->setValue(0);
+    ui->spinTranslacaoY->setValue(0);
+    ui->hsEscalaX->setValue(0);
+    ui->hsEscalaY->setValue(0);
+    ui->hsRotacaoX->setValue(0);
+}
+
+void MainWindow::on_btnCarregarOBJ_clicked() {
+    // ... seu código ...
+    QMessageBox::information(this, "Carregar", "Funcionalidade de carregar arquivo ainda não implementada completamente.");
+}
+
+
+// Se você adicionar um botão para criar nova câmera/janela:
+/*
+void MainWindow::on_btnNovaCamera_clicked() {
+    // Exemplo: Criar uma nova janela com nome e dimensões padrão ou pedidas ao usuário
+    QString nomeNovaCamera = QString("Câmera %1").arg(displayFile->obterListaJanelasMundo().size() + 1);
+    auto novaJanela = std::make_shared<JanelaMundo>(nomeNovaCamera, -100, -100, 100, 100); // Exemplo de dimensões
+    displayFile->adicionarJanelaMundo(novaJanela);
+    atualizarCbDFCamera();
+    ui->cbDFCameras->setCurrentText(novaJanela->obterNome()); // Seleciona a nova câmera
+}
+*/

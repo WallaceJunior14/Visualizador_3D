@@ -1,30 +1,27 @@
+// circunferencia_obj.h
 #ifndef CIRCUNFERENCIA_OBJ_H
 #define CIRCUNFERENCIA_OBJ_H
 
 #include "objeto_grafico.h"
-#include <cmath> // Para M_PI, cos, sin
-
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
 
 class CircunferenciaObj : public ObjetoGrafico {
 public:
-    CircunferenciaObj(const QString& nome, const Ponto2D& centro, double raio,
-                      const QColor& corCirc = Qt::black, int numSegmentos = 36);
-
-    Ponto2D calcularCentroGeometrico() const override;
+    CircunferenciaObj(const QString& nome, const Ponto2D& centro, double raio, const QColor& cor);
 
     Ponto2D obterCentroOriginal() const;
     double obterRaioOriginal() const;
 
-    void definirCentroRaio(const Ponto2D& novoCentro, double novoRaio, int numSegmentos = 36);
+    void definirCentroOriginal(const Ponto2D& novoCentro);
+    void definirRaioOriginal(double novoRaio);
+
+    // Sobrescrever para gerar pontos de aproximação com base no centro/raio originais
+    // void recalcularPontosTransformados(const Matriz& matrizNormalizacao) override; // Exemplo
 
 private:
-    void gerarPontosAproximacao(int numSegmentos);
+    Ponto2D centroOriginal_m; // Renomeado para evitar conflito com método herdado se houver
+    double raioOriginal_m;
 
-    Ponto2D centroOriginal; // Armazena o centro original para referência
-    double raioOriginal;    // Armazena o raio original
+    void gerarPontosAproximacao(); // Helper interno para atualizar pontosOriginaisMundo
 };
 
 #endif // CIRCUNFERENCIA_OBJ_H

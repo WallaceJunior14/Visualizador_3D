@@ -43,6 +43,7 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         "",
         "index",
         "on_btnCor_clicked",
+        "on_btnModificarForma_clicked",
         "on_btnDesenhar_clicked",
         "on_btnExcluirForma_clicked",
         "on_btnCarregarOBJ_clicked",
@@ -53,7 +54,8 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         "value",
         "on_hsEscalaY_valueChanged",
         "on_hsRotacaoX_valueChanged",
-        "on_cbDisplayFile_currentIndexChanged"
+        "on_cbDisplayFile_currentIndexChanged",
+        "on_cbDFCamera_currentIndexChanged"
     };
 
     QtMocHelpers::UintData qt_methods {
@@ -63,34 +65,40 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         }}),
         // Slot 'on_btnCor_clicked'
         QtMocHelpers::SlotData<void()>(4, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'on_btnDesenhar_clicked'
+        // Slot 'on_btnModificarForma_clicked'
         QtMocHelpers::SlotData<void()>(5, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'on_btnExcluirForma_clicked'
+        // Slot 'on_btnDesenhar_clicked'
         QtMocHelpers::SlotData<void()>(6, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'on_btnCarregarOBJ_clicked'
+        // Slot 'on_btnExcluirForma_clicked'
         QtMocHelpers::SlotData<void()>(7, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'on_btnCarregarOBJ_clicked'
+        QtMocHelpers::SlotData<void()>(8, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'on_spinTranslacaoX_valueChanged'
-        QtMocHelpers::SlotData<void(double)>(8, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::Double, 9 },
+        QtMocHelpers::SlotData<void(double)>(9, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::Double, 10 },
         }}),
         // Slot 'on_spinTranslacaoY_valueChanged'
-        QtMocHelpers::SlotData<void(double)>(10, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::Double, 9 },
+        QtMocHelpers::SlotData<void(double)>(11, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::Double, 10 },
         }}),
         // Slot 'on_hsEscalaX_valueChanged'
-        QtMocHelpers::SlotData<void(int)>(11, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::Int, 12 },
+        QtMocHelpers::SlotData<void(int)>(12, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::Int, 13 },
         }}),
         // Slot 'on_hsEscalaY_valueChanged'
-        QtMocHelpers::SlotData<void(int)>(13, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::Int, 12 },
+        QtMocHelpers::SlotData<void(int)>(14, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::Int, 13 },
         }}),
         // Slot 'on_hsRotacaoX_valueChanged'
-        QtMocHelpers::SlotData<void(int)>(14, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::Int, 12 },
+        QtMocHelpers::SlotData<void(int)>(15, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::Int, 13 },
         }}),
         // Slot 'on_cbDisplayFile_currentIndexChanged'
-        QtMocHelpers::SlotData<void(int)>(15, 2, QMC::AccessPrivate, QMetaType::Void, {{
+        QtMocHelpers::SlotData<void(int)>(16, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::Int, 3 },
+        }}),
+        // Slot 'on_cbDFCamera_currentIndexChanged'
+        QtMocHelpers::SlotData<void(int)>(17, 2, QMC::AccessPrivate, QMetaType::Void, {{
             { QMetaType::Int, 3 },
         }}),
     };
@@ -118,15 +126,17 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         switch (_id) {
         case 0: _t->on_comboFormas_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
         case 1: _t->on_btnCor_clicked(); break;
-        case 2: _t->on_btnDesenhar_clicked(); break;
-        case 3: _t->on_btnExcluirForma_clicked(); break;
-        case 4: _t->on_btnCarregarOBJ_clicked(); break;
-        case 5: _t->on_spinTranslacaoX_valueChanged((*reinterpret_cast< std::add_pointer_t<double>>(_a[1]))); break;
-        case 6: _t->on_spinTranslacaoY_valueChanged((*reinterpret_cast< std::add_pointer_t<double>>(_a[1]))); break;
-        case 7: _t->on_hsEscalaX_valueChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
-        case 8: _t->on_hsEscalaY_valueChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
-        case 9: _t->on_hsRotacaoX_valueChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
-        case 10: _t->on_cbDisplayFile_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 2: _t->on_btnModificarForma_clicked(); break;
+        case 3: _t->on_btnDesenhar_clicked(); break;
+        case 4: _t->on_btnExcluirForma_clicked(); break;
+        case 5: _t->on_btnCarregarOBJ_clicked(); break;
+        case 6: _t->on_spinTranslacaoX_valueChanged((*reinterpret_cast< std::add_pointer_t<double>>(_a[1]))); break;
+        case 7: _t->on_spinTranslacaoY_valueChanged((*reinterpret_cast< std::add_pointer_t<double>>(_a[1]))); break;
+        case 8: _t->on_hsEscalaX_valueChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 9: _t->on_hsEscalaY_valueChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 10: _t->on_hsRotacaoX_valueChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 11: _t->on_cbDisplayFile_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 12: _t->on_cbDFCamera_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
         default: ;
         }
     }
@@ -151,14 +161,14 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 11)
+        if (_id < 13)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 11;
+        _id -= 13;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 11)
+        if (_id < 13)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 11;
+        _id -= 13;
     }
     return _id;
 }

@@ -10,8 +10,6 @@
 FrameDesenho::FrameDesenho(QWidget *parent)
     : QFrame(parent),
     displayFile(nullptr),
-    janelaMundo(std::make_shared<JanelaMundo>(-250, -250, 250, 250)),
-    // ViewportTela será inicializado em atualizarViewport e no construtor após ter width/height
     clipper(std::make_unique<ClipperCohenSutherland>(-1.0, -1.0, 1.0, 1.0))
 {
     setAutoFillBackground(true);
@@ -37,19 +35,28 @@ FrameDesenho::~FrameDesenho() {}
 
 void FrameDesenho::definirDisplayFile(std::shared_ptr<DisplayFile> df) {
     displayFile = df;
-    redesenhar();
-}
-
-void FrameDesenho::definirJanelaMundo(std::shared_ptr<JanelaMundo> janela) {
-    janelaMundo = janela;
-    if (displayFile && janelaMundo) {
-        displayFile->recalcularTodosPontosSCN(janelaMundo->obterMatrizNormalizacao());
+    if (displayFile) {
+        // Garante que os objetos no displayFile estejam com SCNs corretos
+        // de acordo com a janela interna do displayFile.
+        displayFile->recalcularTodosPontosSCN();
     }
-    redesenhar();
+    redesenhar(); // Redesenha com o novo display file
 }
 
-std::shared_ptr<JanelaMundo> FrameDesenho::obterJanelaMundo() const {
-    return janelaMundo;
+// void FrameDesenho::definirJanelaMundo(std::shared_ptr<JanelaMundo> janela) {
+//     janelaMundo = janela;
+//     if (displayFile && janelaMundo) {
+//         displayFile->recalcularTodosPontosSCN(janelaMundo->obterMatrizNormalizacao());
+//     }
+//     redesenhar();
+// }
+
+std::shared_ptr<JanelaMundo> FrameDesenho::obterJanelaMundoAtiva() const {
+    if (displayFile) {
+        return displayFile->obterJanelaMundoAtiva(); // Modificado
+    }
+    qWarning("FrameDesenho::obterJanelaMundoAtiva() chamada, mas DisplayFile não está definido ou não tem janela ativa.");
+    return nullptr;
 }
 
 void FrameDesenho::atualizarViewport() {
@@ -73,7 +80,8 @@ void FrameDesenho::paintEvent(QPaintEvent *event) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    if (!displayFile || !janelaMundo || !viewportTela || viewportTela->obterLargura() <= 0 || viewportTela->obterAltura() <= 0) {
+    std::shared_ptr<JanelaMundo> janelaAtiva = obterJanelaMundoAtiva();
+    if (!displayFile || !janelaAtiva || !viewportTela || viewportTela->obterLargura() <= 0 || viewportTela->obterAltura() <= 0) {
         // Não desenha se a viewport não estiver pronta ou tiver tamanho inválido
         if (viewportTela && (viewportTela->obterLargura() <= 0 || viewportTela->obterAltura() <= 0)) {
             painter.drawText(rect(), Qt::AlignCenter, "Viewport com tamanho inválido.");
@@ -83,7 +91,8 @@ void FrameDesenho::paintEvent(QPaintEvent *event) {
         return;
     }
 
-    Matriz matViewport = viewportTela->obterMatrizTransformacaoViewport();
+    Matriz matNorm = janelaAtiva->obterMatrizNormalizacao();
+    Matriz matViewport = viewportTela->obterMatrizTransformacaoViewport(); // Matriz da viewport do frame
 
     // Desenhar objetos
     for (const auto& objeto : displayFile->obterObjetos()) {
@@ -173,49 +182,71 @@ void FrameDesenho::desenharObjeto(QPainter& painter, std::shared_ptr<ObjetoGrafi
         auto circulo = std::dynamic_pointer_cast<CircunferenciaObj>(objeto);
         if (!circulo) return;
 
-        // Usar a cor definida no objeto para a caneta
-        painter.setPen(QPen(circulo->obterCor(), 1)); // Caneta fina para os pontos da circunferência
+        // Usar a cor definida no objeto para a caneta.
+        // A espessura 1 é boa para uma linha de circunferência suave.
+        painter.setPen(QPen(circulo->obterCor(), 1));
 
         Ponto2D centroOriginal = circulo->obterCentroOriginal();
         double raioOriginal = circulo->obterRaioOriginal();
+        int numPontosAprox = 1000; // Número de segmentos para aproximar a circunferência
 
-        // O número de pontos para a aproximação pode vir do objeto CircunferenciaObj
-        // ou ser definido aqui. Usar o mesmo que em gerarPontosAproximacao seria consistente.
-        int numPontosAprox = 72; // Ajuste para mais suavidade vs desempenho
-
-        // Obter a matriz de transformação completa: Objeto -> Mundo -> Normalizado -> Viewport
+        // Matrizes de transformação
         Matriz matObj = circulo->obterMatrizTransformacaoAcumulada();
-        Matriz matNorm = janelaMundo->obterMatrizNormalizacao();
-        // matViewport já está disponível como argumento da função desenharObjeto
+        std::shared_ptr<JanelaMundo> janelaAtiva = displayFile->obterJanelaMundoAtiva(); // Certifique-se que displayFile é válido
+        if (!janelaAtiva) return; // Adiciona uma verificação para janelaAtiva
+        Matriz matNorm = janelaAtiva->obterMatrizNormalizacao();
+        // matViewport já é um argumento da função desenharObjeto
 
         Matriz matTransformacaoOriginalParaSCN = matNorm * matObj;
-        Matriz matTransformacaoOriginalParaTela = matViewport * matNorm * matObj;
+
+        Ponto2D p1_original, p2_original; // Pontos no espaço original do objeto
+        Ponto2D p1_scn, p2_scn;           // Pontos em SCN
 
         for (int i = 0; i < numPontosAprox; ++i) {
-            double angulo = 2.0 * M_PI * static_cast<double>(i) / static_cast<double>(numPontosAprox);
+            // Calcula o ângulo para o ponto atual (i) e o próximo ponto (i+1)
+            double angulo1 = 2.0 * M_PI * static_cast<double>(i) / static_cast<double>(numPontosAprox);
+            // O operador % numPontosAprox garante que o último ponto conecte-se ao primeiro
+            double angulo2 = 2.0 * M_PI * static_cast<double>((i + 1) % numPontosAprox) / static_cast<double>(numPontosAprox);
 
-            // 1. Gerar um ponto na circunferência original (coordenadas do mundo, relativas ao objeto)
-            Ponto2D pontoNaCircOriginal(
-                centroOriginal.obterX() + raioOriginal * std::cos(angulo),
-                centroOriginal.obterY() + raioOriginal * std::sin(angulo)
-                // W=1 por padrão em Ponto2D
+            // Ponto 1 do segmento (atual) no espaço original do objeto
+            p1_original = Ponto2D(
+                centroOriginal.obterX() + raioOriginal * std::cos(angulo1),
+                centroOriginal.obterY() + raioOriginal * std::sin(angulo1)
                 );
 
-            // 2. Transformar este ponto para Coordenadas Normalizadas de Dispositivo (SCN) para clipping
-            Ponto2D p_scn_temp(matTransformacaoOriginalParaSCN * pontoNaCircOriginal);
-            p_scn_temp.normalizar(); // Garante w=1, se não for ponto no infinito
+            // Ponto 2 do segmento (próximo) no espaço original do objeto
+            p2_original = Ponto2D(
+                centroOriginal.obterX() + raioOriginal * std::cos(angulo2),
+                centroOriginal.obterY() + raioOriginal * std::sin(angulo2)
+                );
 
-            // 3. Clipar este ponto SCN
-            if (clipper->calcularCodigoRegiao(p_scn_temp) == ClipperCohenSutherland::DENTRO) {
-                // 4. Se visível em SCN, transformar o ponto ORIGINAL para Tela
-                //    (É mais preciso transformar o original do que o SCN já normalizado se houve divisão por W)
-                Ponto2D pTela(matTransformacaoOriginalParaTela * pontoNaCircOriginal);
+            // Transforma os pontos originais para SCN
+            p1_scn = Ponto2D(matTransformacaoOriginalParaSCN * p1_original);
+            p1_scn.normalizar(); // Garante w=1
 
-                // 5. Desenhar o ponto (como na sua função: desenhar uma linha de um pixel)
-                painter.drawLine(qRound(pTela.obterX()), qRound(pTela.obterY()),
-                                  qRound(pTela.obterX()), qRound(pTela.obterY()));
-                // Ou mais diretamente:
-                //painter.drawPoint(qRound(pTela.obterX()), qRound(pTela.obterY()));
+            p2_scn = Ponto2D(matTransformacaoOriginalParaSCN * p2_original);
+            p2_scn.normalizar(); // Garante w=1
+
+            // Cria cópias para o clipper, pois ele pode modificar os pontos
+            Ponto2D p1_scn_para_clipping = p1_scn;
+            Ponto2D p2_scn_para_clipping = p2_scn;
+
+            // Aplica o clipping de reta ao segmento (p1_scn_clippable, p2_scn_clippable)
+            // A função cliparReta deve modificar p1_scn_clippable e p2_scn_clippable se necessário
+            if (clipper->cliparReta(p1_scn_para_clipping, p2_scn_para_clipping)) {
+                // Se o segmento (ou parte dele) é visível após o clipping:
+
+                // Transforma os pontos SCN (agora clipados) para coordenadas de Tela
+                // A matriz matViewport transforma de SCN para Tela.
+                Matriz p1_tela_mat = matViewport * p1_scn_para_clipping;
+                Matriz p2_tela_mat = matViewport * p2_scn_para_clipping;
+
+                Ponto2D p1_tela(p1_tela_mat); // Construtor Ponto2D(Matriz) deve normalizar W se aplicável
+                Ponto2D p2_tela(p2_tela_mat);
+
+                // Desenha o segmento de reta na tela
+                painter.drawLine(qRound(p1_tela.obterX()), qRound(p1_tela.obterY()),
+                                 qRound(p2_tela.obterX()), qRound(p2_tela.obterY()));
             }
         }
     }

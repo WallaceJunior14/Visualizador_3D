@@ -1,46 +1,54 @@
+// circunferencia_obj.cpp
 #include "circunferencia_obj.h"
+#include <cmath> // Para M_PI, cos, sin
 
-CircunferenciaObj::CircunferenciaObj(const QString& nome, const Ponto2D& centro, double raio,
-                                     const QColor& corCirc, int numSegmentos)
-    : ObjetoGrafico(nome, TipoObjeto::CIRCUNFERENCIA), // Usar o novo tipo
-    centroOriginal(centro), raioOriginal(raio) {
-    definirCor(corCirc);
-    gerarPontosAproximacao(numSegmentos);
-    // A matriz de transformação acumulada é identidade por padrão.
-    // recalcularPontosTransformados será chamado externamente após adição ao display file.
-}
-
-Ponto2D CircunferenciaObj::calcularCentroGeometrico() const {
-    // O centro geométrico de uma circunferência é seu próprio centro.
-    // Retorna o centro original, pois as transformações são aplicadas via matriz.
-    return centroOriginal;
+CircunferenciaObj::CircunferenciaObj(const QString& nome, const Ponto2D& centro, double raio, const QColor& cor)
+    : ObjetoGrafico(nome, TipoObjeto::CIRCUNFERENCIA), centroOriginal_m(centro), raioOriginal_m(raio) {
+    definirCor(cor);
+    gerarPontosAproximacao(); // Gera os pontos para desenho e SCN
 }
 
 Ponto2D CircunferenciaObj::obterCentroOriginal() const {
-    return centroOriginal;
+    return centroOriginal_m;
 }
 
 double CircunferenciaObj::obterRaioOriginal() const {
-    return raioOriginal;
+    return raioOriginal_m;
 }
 
-void CircunferenciaObj::definirCentroRaio(const Ponto2D& novoCentro, double novoRaio, int numSegmentos) {
-    centroOriginal = novoCentro;
-    raioOriginal = novoRaio;
-    gerarPontosAproximacao(numSegmentos);
-    // Importante: após esta chamada, quem gerencia o objeto (DisplayFile/MainWindow)
-    // deve chamar recalcularPontosTransformados se a janela de normalização for conhecida.
+void CircunferenciaObj::definirCentroOriginal(const Ponto2D& novoCentro) {
+    centroOriginal_m = novoCentro;
+    gerarPontosAproximacao(); // Re-gera pontos com novo centro
 }
 
-
-void CircunferenciaObj::gerarPontosAproximacao(int numSegmentos) {
-    pontosOriginaisMundo.clear(); // Limpa pontos antigos
-    if (numSegmentos < 3) numSegmentos = 3; // Mínimo para um polígono
-
-    for (int i = 0; i < numSegmentos; ++i) {
-        double angulo = 2.0 * M_PI * static_cast<double>(i) / static_cast<double>(numSegmentos);
-        double x = centroOriginal.obterX() + raioOriginal * std::cos(angulo);
-        double y = centroOriginal.obterY() + raioOriginal * std::sin(angulo);
-        pontosOriginaisMundo.append(Ponto2D(x, y));
+void CircunferenciaObj::definirRaioOriginal(double novoRaio) {
+    if (novoRaio > 0) {
+        raioOriginal_m = novoRaio;
+        gerarPontosAproximacao(); // Re-gera pontos com novo raio
     }
 }
+
+// Helper para gerar pontos que serão armazenados em pontosOriginaisMundo
+// Estes são os pontos no "espaço do objeto" antes de qualquer transformação acumulada.
+// Para a circunferência, podemos usar pontos aproximados ou apenas o centro em pontosOriginaisMundo.
+// A lógica de desenho em FrameDesenho já redesenha a circunferência ponto a ponto.
+// Aqui, vamos popular pontosOriginaisMundo com pontos aproximados para consistência com outros objetos
+// e para o cálculo do centro geométrico.
+void CircunferenciaObj::gerarPontosAproximacao() {
+    QList<Ponto2D> pontosAprox;
+    int numSegmentos = 72; // Ou um valor configurável
+    for (int i = 0; i < numSegmentos; ++i) {
+        double angulo = 2.0 * M_PI * static_cast<double>(i) / static_cast<double>(numSegmentos);
+        pontosAprox.append(Ponto2D(
+            centroOriginal_m.obterX() + raioOriginal_m * std::cos(angulo),
+            centroOriginal_m.obterY() + raioOriginal_m * std::sin(angulo)
+            ));
+    }
+    // A classe base ObjetoGrafico usa pontosOriginaisMundo para recalcularPontosTransformados.
+    // E calcularCentroGeometrico usa pontosOriginaisMundo.
+    definirPontosOriginaisMundo(pontosAprox);
+}
+
+// O ObjetoGrafico::recalcularPontosTransformados(matrizNormalizacao)
+// já pegará os pontos de `pontosOriginaisMundo` (agora atualizados por gerarPontosAproximacao)
+// e aplicará `matrizTransformacaoAcumulada` e depois `matrizNormalizacao`.
