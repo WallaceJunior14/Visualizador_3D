@@ -1,5 +1,5 @@
 #include "matriz.h"
-#include <cmath> // Para std::cos, std::sin, M_PI (pode precisar definir _USE_MATH_DEFINES no Windows)
+#include <cmath> // Para std::cos, std::sin, M_PI
 
 #ifndef M_PI // Definir M_PI se não estiver disponível (comum em MSVC)
 #define M_PI 3.14159265358979323846

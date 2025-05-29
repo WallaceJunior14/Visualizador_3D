@@ -1,11 +1,10 @@
-#include "frame_desenho.h" // Nome do arquivo de cabeçalho atualizado
+#include "frame_desenho.h"
 #include "ponto_obj.h"
 #include "reta_obj.h"
 #include "poligono_obj.h"
 #include "circunferencia_obj.h"
 #include <QMouseEvent>
 #include <QDebug>
-
 
 FrameDesenho::FrameDesenho(QWidget *parent)
     : QFrame(parent),
@@ -352,7 +351,7 @@ void FrameDesenho::desenharDetalhesDaViewport(QPainter& painter) {
     painter.restore(); // Restaura o estado do painter
 }
 
-// Implementações de mouse events (descomente e adapte se necessário)
+// Implementações de mouse events
 /*
 void FrameDesenho::mousePressEvent(QMouseEvent *event) {
     // Exemplo: Iniciar pan ou seleção

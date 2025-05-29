@@ -1,4 +1,3 @@
-// transformador_geometrico.h
 #ifndef TRANSFORMADOR_GEOMETRICO_H
 #define TRANSFORMADOR_GEOMETRICO_H
 

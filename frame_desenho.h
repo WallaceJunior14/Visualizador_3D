@@ -1,13 +1,14 @@
 #ifndef FRAME_DESENHO_H
 #define FRAME_DESENHO_H
 
-#include <QFrame> // Alterado de QWidget para QFrame
+#include <QFrame>
 #include <QPainter>
-#include <memory> // Para std::shared_ptr
+#include <memory>
 #include "display_file.h"
 #include "janela_mundo.h"
 #include "viewport_tela.h"
 #include "clipper.h"
+#include <cmath>
 
 class FrameDesenho : public QFrame {
     Q_OBJECT
@@ -34,7 +35,6 @@ private:
 
     void desenharObjeto(QPainter& painter, std::shared_ptr<ObjetoGrafico> objeto, const Matriz& matViewport);
 
-    // Modificado para incluir todos os detalhes da viewport (borda, label, eixos)
     void desenharDetalhesDaViewport(QPainter& painter);
 
 public:

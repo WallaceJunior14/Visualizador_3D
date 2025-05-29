@@ -26,20 +26,20 @@ public:
     double& operator()(int linha, int coluna);
     const double& operator()(int linha, int coluna) const;
 
-    // Multiplicação de matrizes.
+    // Multiplicação de matrizes
     Matriz operator*(const Matriz& outra) const;
 
-    // Getters para dimensões.
+    // Getters para dimensões
     int obterLinhas() const;
     int obterColunas() const;
 
-    // Funções estáticas para criar matrizes de transformação comuns.
+    // Funções estáticas para criar matrizes de transformação comuns
     static Matriz identidade(int tamanho = 3);
     static Matriz translacao(double dx, double dy);
     static Matriz escala(double sx, double sy);
     static Matriz rotacao(double anguloGraus); // Rotação em torno da origem
 
-    // Imprime a matriz no console (para depuração).
+    // Imprime a matriz no console (para depuração)
     void imprimir(QString nome = "Matriz") const;
 
 protected:

@@ -6,7 +6,6 @@
 #include <QColor>
 #include "frame_desenho.h"
 
-// Forward declarations
 namespace Ui { class MainWindow; }
 class DisplayFile;
 class ObjetoGrafico;
@@ -40,7 +39,7 @@ private slots:
 
     void on_cbDFCamera_currentIndexChanged(int index);
 
-    // Slots para zoom/pan (opcional)
+    // Slots para zoom/pan
     // void zoomIn();
     // void zoomOut();
     // void panEsquerda();

@@ -3,8 +3,8 @@
 
 #include "objeto_grafico.h"
 
-// Representa um objeto gráfico do tipo Reta. [cite: 1]
-// Uma reta é definida por dois pontos (início e fim) no mundo. [cite: 5]
+// Representa um objeto gráfico do tipo Reta.
+// Uma reta é definida por dois pontos no mundo.
 class RetaObj : public ObjetoGrafico {
 public:
     // Construtor: nome e coordenadas dos dois pontos da reta.

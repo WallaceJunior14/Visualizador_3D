@@ -1,4 +1,3 @@
-// (Conteúdo anterior de objeto_grafico.cpp...)
 #include "objeto_grafico.h"
 #include <numeric> // Para std::accumulate (se necessário para centroide mais complexo)
 
@@ -35,10 +34,6 @@ const Matriz& ObjetoGrafico::obterMatrizTransformacaoAcumulada() const {
 
 void ObjetoGrafico::aplicarTransformacao(const Matriz& transformacao) {
     matrizTransformacaoAcumulada = transformacao * matrizTransformacaoAcumulada;
-    // AVISO: Após aplicar a transformação, é crucial chamar recalcularPontosTransformados
-    // passando a matriz de normalização atual para que os pontos SCN sejam atualizados.
-    // Ex: objeto->aplicarTransformacao(T);
-    //     objeto->recalcularPontosTransformados(janelaMundo->obterMatrizNormalizacao());
 }
 
 void ObjetoGrafico::recalcularPontosTransformados(const Matriz& matrizNormalizacao) {

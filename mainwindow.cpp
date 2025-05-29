@@ -43,21 +43,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->cbDisplayFile, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_cbDisplayFile_currentIndexChanged); // Certifique-se que esta conexão existe
     connect(ui->cbDFCameras, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_cbDFCamera_currentIndexChanged);
     connect(ui->btnModificarForma, &QPushButton::clicked, this, &MainWindow::on_btnModificarForma_clicked);
-    // Adicione connect para btnDesenhar e btnExcluirForma se não estiverem por auto-conexão
-    // connect(ui->btnDesenhar, &QPushButton::clicked, this, &MainWindow::on_btnDesenhar_clicked);
-    // connect(ui->btnExcluirForma, &QPushButton::clicked, this, &MainWindow::on_btnExcluirForma_clicked);
-
 
     atualizarCbDisplayFile(); // Popula ComboBox de objetos
     atualizarCbDFCamera();    // Popula ComboBox de câmeras
 
-    // Define o estado inicial da UI após popular os comboboxes
-    // Nenhum objeto ou câmera selecionada para transformação inicialmente.
-    // Não é necessário chamar setCurrentIndex(-1) aqui se os comboboxes estão vazios
-    // ou se a atualização deles não seleciona nada por padrão.
-    // updateTransformationTargetUIState() já será chamado pelos setCurrentIndex(-1)
-    // nos slots se eles forem acionados por clear() ou se o índice mudar para -1.
-    // Para garantir o estado inicial correto:
     objetoSelecionado = nullptr;
     janelaSelecionada = nullptr;
 
@@ -99,7 +88,6 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::inicializarUI() {
-    // ... (seu código existente para popular comboFormas, configurar spinners, etc.)
     ui->comboFormas->addItem("Ponto", static_cast<int>(TipoObjeto::PONTO));
     ui->comboFormas->addItem("Reta", static_cast<int>(TipoObjeto::RETA));
     ui->comboFormas->addItem("Polígono (Triângulo)", static_cast<int>(TipoObjeto::POLIGONO));
@@ -111,8 +99,6 @@ void MainWindow::inicializarUI() {
     ui->spinEscalaX->setValue(0);
     ui->spinEscalaY->setValue(0);
     ui->hsRotacaoX->setValue(0);
-    // ui->hsRotacaoY->setValue(0); // Desabilitado na UI, mas se usar
-    // ui->hsRotacaoZ->setValue(0); // Desabilitado na UI
 
     if(ui->frameDesenho) {
         ui->frameDesenho->setFocusPolicy(Qt::StrongFocus);
@@ -121,8 +107,6 @@ void MainWindow::inicializarUI() {
     ui->tabWidget->setEnabled(objetoSelecionado != nullptr || janelaSelecionada != nullptr);
 }
 
-
-// ... gerenciarVisibilidadeSpinners e atualizarCbDisplayFile (semelhantes ao seu código) ...
 void MainWindow::gerenciarVisibilidadeSpinners(const QString& tipoForma) {
     bool mostrarX1Y1 = true;
     bool mostrarX2Y2 = false;
@@ -166,8 +150,6 @@ void MainWindow::atualizarCbDisplayFile() {
     // A habilitação do tabWidget é tratada em on_cbDisplayFile_currentIndexChanged e on_cbDFCamera_currentIndexChanged
 }
 
-
-// Novo método para popular o ComboBox de Câmeras/Janelas
 void MainWindow::atualizarCbDFCamera() {
     QString nomeJanelaSelecionadaAnteriormente = janelaSelecionada ? janelaSelecionada->obterNome() : (displayFile && displayFile->obterJanelaMundoAtiva() ? displayFile->obterJanelaMundoAtiva()->obterNome() : "");
 
@@ -262,7 +244,7 @@ void MainWindow::on_cbDisplayFile_currentIndexChanged(int index) {
     updateTransformationTargetUIState(); // Atualiza a UI com base no novo estado de seleção
 }
 
-// --- Slots de Desenho e Exclusão (ajustar para usar janelaMundoAtiva) ---
+// Slots de Desenho e Exclusão
 void MainWindow::on_btnDesenhar_clicked() {
     if (!displayFile || !displayFile->obterJanelaMundoAtiva()) {
         QMessageBox::critical(this, "Erro", "DisplayFile ou Janela Mundo ativa não inicializada.");
@@ -376,9 +358,6 @@ void MainWindow::atualizarObjetoComDadosDaUI(std::shared_ptr<ObjetoGrafico>& obj
         objeto->definirPontosOriginaisMundo({p1, p2});
     } else if (tipo == TipoObjeto::POLIGONO) {
         QList<Ponto2D> novosPontos;
-        // A lógica aqui precisa ser consistente com como os spinners são preenchidos
-        // em on_cbDisplayFile_currentIndexChanged para o tipo de polígono selecionado.
-        // Se for um triângulo e X1-Y3 estão visíveis e preenchidos:
         if (tipoObjetoParaStringUI(tipo, objeto->obterPontosOriginaisMundo().size()) == "Polígono (Triângulo)") {
             novosPontos << Ponto2D(ui->spinX1->value(), ui->spinY1->value())
             << Ponto2D(ui->spinX2->value(), ui->spinY2->value())
@@ -480,8 +459,7 @@ void MainWindow::on_btnExcluirForma_clicked() {
     }
 }
 
-// --- Slots para Transformações (Modificados) ---
-
+// Slots para Transformações
 void MainWindow::aplicarTranslacaoAtual() {
     if (!ui->tabWidget->isEnabled()) return; // Se as transformações não estiverem habilitadas, não faz nada
 
@@ -560,13 +538,12 @@ void MainWindow::aplicarRotacaoAtual() {
     if (objetoSelecionado && displayFile && displayFile->obterJanelaMundoAtiva()) {
         // Rotacionar OBJETO SELECIONADO
         Ponto2D pivo = objetoSelecionado->calcularCentroGeometrico();
-        // Assumindo que sua Matriz::rotacao ou TransformadorGeometrico::rotacao espera graus ou você converte
         Matriz R = TransformadorGeometrico::rotacao(anguloGraus, pivo); // Se esperar radianos: qDegreesToRadians(anguloGraus)
         objetoSelecionado->aplicarTransformacao(R);
         objetoSelecionado->recalcularPontosTransformados(displayFile->obterJanelaMundoAtiva()->obterMatrizNormalizacao());
     } else if (janelaSelecionada && displayFile) {
         // Rotacionar CÂMERA SELECIONADA
-        janelaSelecionada->rotacionar(anguloGraus); // Lembre-se que a implementação visual disso é complexa
+        janelaSelecionada->rotacionar(anguloGraus);
         displayFile->recalcularTodosPontosSCN();
         qDebug() << "Tentativa de rotacionar câmera: " << janelaSelecionada->obterNome() << " por " << anguloGraus << " graus.";
     } else {
@@ -579,10 +556,6 @@ void MainWindow::aplicarRotacaoAtual() {
 void MainWindow::on_hsRotacaoX_valueChanged(int /*value*/) {
     aplicarRotacaoAtual();
 }
-
-// ... restante do mainwindow.cpp (on_btnCor_clicked, on_btnCarregarOBJ_clicked, etc.)
-// Mantenha-os como estão, a menos que precisem de lógica relacionada à janela ativa.
-// Por exemplo, on_btnCarregarOBJ_clicked não parece precisar de mudanças imediatas para esta funcionalidade.
 
 void MainWindow::on_btnCor_clicked() {
     QColor cor = QColorDialog::getColor(corSelecionadaParaDesenho, this, "Selecionar Cor da Forma");
@@ -653,13 +626,6 @@ QString MainWindow::gerarNomeFormatadoParaObjeto(const QString& nomeBase,
         // e assumir que CircunferenciaObj armazena esses dados.
         auto circulo = std::dynamic_pointer_cast<CircunferenciaObj>(objeto);
         if (circulo) {
-            // Supondo que CircunferenciaObj tenha métodos para obter centro e raio originais
-            // Se não tiver, você precisará adicioná-los ou passar os dados de outra forma.
-            // No seu código anterior, CircunferenciaObj era criado com um Ponto2D (centro) e um double (raio).
-            // Vamos assumir que eles são acessíveis.
-            // Por agora, vamos pegar o primeiro ponto original como centro se disponível
-            // e o raio precisaria ser recuperado do objeto CircunferenciaObj.
-            // Esta parte pode precisar de ajuste dependendo da sua classe CircunferenciaObj.
             if (!pontosOriginais.isEmpty()) { // O centro pode estar aqui
                 Ponto2D centro = circulo->obterCentroOriginal(); // NECESSÁRIO: Adicionar este método a CircunferenciaObj
                 double raio = circulo->obterRaioOriginal();   // NECESSÁRIO: Adicionar este método a CircunferenciaObj
@@ -755,7 +721,7 @@ void MainWindow::on_btnCarregarOBJ_clicked() {
 }
 
 
-// Se você adicionar um botão para criar nova câmera/janela:
+// Botão para criar nova câmera/janela:
 /*
 void MainWindow::on_btnNovaCamera_clicked() {
     // Exemplo: Criar uma nova janela com nome e dimensões padrão ou pedidas ao usuário

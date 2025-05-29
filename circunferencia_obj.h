@@ -1,4 +1,3 @@
-// circunferencia_obj.h
 #ifndef CIRCUNFERENCIA_OBJ_H
 #define CIRCUNFERENCIA_OBJ_H
 
@@ -15,13 +14,13 @@ public:
     void definirRaioOriginal(double novoRaio);
 
     // Sobrescrever para gerar pontos de aproximação com base no centro/raio originais
-    // void recalcularPontosTransformados(const Matriz& matrizNormalizacao) override; // Exemplo
+    // void recalcularPontosTransformados(const Matriz& matrizNormalizacao) override;
 
 private:
-    Ponto2D centroOriginal_m; // Renomeado para evitar conflito com método herdado se houver
+    Ponto2D centroOriginal_m;
     double raioOriginal_m;
 
-    void gerarPontosAproximacao(); // Helper interno para atualizar pontosOriginaisMundo
+    void gerarPontosAproximacao();
 };
 
 #endif // CIRCUNFERENCIA_OBJ_H

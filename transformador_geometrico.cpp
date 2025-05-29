@@ -1,4 +1,3 @@
-// transformador_geometrico.cpp
 #include "transformador_geometrico.h"
 #include <cmath>
 

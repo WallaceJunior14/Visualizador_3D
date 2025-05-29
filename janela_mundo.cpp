@@ -1,11 +1,8 @@
-// janela_mundo.cpp
 #include "janela_mundo.h"
 #include <algorithm> // Para std::min, std::max
-#include <cmath>     // Para M_PI, cos, sin em rotação (se implementado)
-#include <QDebug>    // Para qWarning (opcional)
+#include <cmath>     // Para M_PI, cos, sin em rotação
+#include <QDebug>    // Para qWarning
 
-
-// Construtor modificado
 JanelaMundo::JanelaMundo(const QString& nomeJanela, double xMin, double yMin, double xMax, double yMax)
     : nome(nomeJanela), minW(xMin, yMin), maxW(xMax, yMax), anguloRotacao(0.0) {
     if (xMin >= xMax || yMin >= yMax) {
@@ -53,7 +50,6 @@ void JanelaMundo::rotacionar(double deltaAnguloGraus) {
     // A normalização precisaria usar this->anguloRotacao
     qDebug() << "JanelaMundo '" << nome << "' rotacionada para " << anguloRotacao << " graus (lógica de matriz de normalização pendente).";
 }
-
 
 void JanelaMundo::definirLimites(double xMin, double yMin, double xMax, double yMax) {
     if (xMin >= xMax || yMin >= yMax) {

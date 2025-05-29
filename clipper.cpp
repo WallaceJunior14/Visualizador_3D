@@ -82,7 +82,6 @@ bool ClipperCohenSutherland::cliparReta(Ponto2D& p1, Ponto2D& p2) {
                 break;
             }
 
-
             // Atualiza o ponto que estava fora com o ponto de interseção.
             if (codigoFora == codigo1) {
                 p1.definirX(x);

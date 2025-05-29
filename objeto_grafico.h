@@ -17,8 +17,6 @@ public:
     // Destrutor virtual para permitir limpeza correta em classes derivadas.
     virtual ~ObjetoGrafico() = default;
 
-    // Métodos virtuais puros que devem ser implementados pelas classes derivadas.
-    //virtual void desenhar(QPainter& painter, const Matriz& transformacaoViewport, const Matriz& transformacaoNormalizacao) = 0;
 
     // Getters e Setters.
     QString obterNome() const;
@@ -33,11 +31,6 @@ public:
     const Matriz& obterMatrizTransformacaoAcumulada() const;
 
     // Aplica uma transformação à matriz acumulada do objeto.
-    // A novaTransformacao é PÓS-multiplicada (M_nova = M_antiga * T)
-    // ou PRÉ-multiplicada (M_nova = T * M_antiga). Comummente pré-multiplicada.
-    // T(v) = M_nova * M_antiga_objeto * Ponto
-    // Se M_obj é a matriz do objeto, e T é a nova transformação:
-    // M_final_obj = T * M_obj
     void aplicarTransformacao(const Matriz& transformacao);
 
     // Recalcula os pontos transformados (Mundo e SCN).
@@ -63,8 +56,8 @@ public:
 protected:
     QString nome;
     TipoObjeto tipo;
-    QList<Ponto2D> pontosOriginaisMundo;      // Pontos de definição no espaço do mundo [cite: 5]
-    Matriz matrizTransformacaoAcumulada;      // Matriz de transformação acumulada do objeto [cite: 9]
+    QList<Ponto2D> pontosOriginaisMundo;      // Pontos de definição no espaço do mundo
+    Matriz matrizTransformacaoAcumulada;      // Matriz de transformação acumulada do objeto
     QColor cor;                               // Cor para desenhar o objeto
 
     // Pontos calculados para renderização

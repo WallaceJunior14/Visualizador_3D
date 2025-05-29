@@ -1,4 +1,3 @@
-// circunferencia_obj.cpp
 #include "circunferencia_obj.h"
 #include <cmath> // Para M_PI, cos, sin
 

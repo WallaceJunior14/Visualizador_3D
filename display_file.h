@@ -1,4 +1,3 @@
-// display_file.h
 #ifndef DISPLAY_FILE_H
 #define DISPLAY_FILE_H
 

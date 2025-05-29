@@ -5,7 +5,7 @@
 #include <QRect> // Para representar a área da viewport em pixels
 
 // Define a "viewport" na tela, uma área em coordenadas de dispositivo (pixels)
-// onde os objetos normalizados (NDC) serão desenhados. [cite: 12]
+// onde os objetos normalizados (NDC) serão desenhados.
 class ViewportTela {
 public:
     // Construtor: x, y do canto superior esquerdo, largura e altura em pixels.

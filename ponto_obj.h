@@ -3,8 +3,8 @@
 
 #include "objeto_grafico.h"
 
-// Representa um objeto gráfico do tipo Ponto. [cite: 1]
-// Um ponto é definido por uma única coordenada no mundo. [cite: 5]
+// Representa um objeto gráfico do tipo Ponto.
+// Um ponto é definido por uma única coordenada no mundo.
 class PontoObj : public ObjetoGrafico {
 public:
     // Construtor: nome e coordenada do ponto.

@@ -1,4 +1,3 @@
-// display_file.cpp
 #include "display_file.h"
 #include <QDebug>
 
