@@ -79,7 +79,6 @@ double JanelaMundo::obterAltura() const {
 }
 
 Matriz JanelaMundo::obterMatrizNormalizacao() const {
-    Matriz norm = Matriz::identidade(3);
     double xw_min = minW.obterX();
     double yw_min = minW.obterY();
     double xw_max = maxW.obterX();
@@ -90,20 +89,25 @@ Matriz JanelaMundo::obterMatrizNormalizacao() const {
         return Matriz::identidade(3);
     }
 
-    // Se anguloRotacao != 0, a matriz de normalização precisaria incluir
-    // uma rotação inversa em torno do centro da JanelaMundo ANTES da translação/escala.
-    // Exemplo conceitual: M_norm = M_escala_para_NDC * M_trans_para_origem_NDC * R(-anguloRotacao, centro_janela_mundo) * T(-centro_janela_mundo)
-    // Isso é uma simplificação e a implementação correta é mais envolvida.
-    // Por agora, a rotação não afetará a matriz.
-
     double sx = (ndcXMax - ndcXMin) / (xw_max - xw_min);
     double sy = (ndcYMax - ndcYMin) / (yw_max - yw_min);
-
     double tx = ndcXMin - xw_min * sx;
     double ty = ndcYMin - yw_min * sy;
 
-    norm(0,0) = sx; norm(0,2) = tx;
-    norm(1,1) = sy; norm(1,2) = ty;
+    Matriz escalaTranslacao = Matriz::identidade(3);
+    escalaTranslacao(0,0) = sx; escalaTranslacao(0,2) = tx;
+    escalaTranslacao(1,1) = sy; escalaTranslacao(1,2) = ty;
 
-    return norm;
+    double cx = (xw_min + xw_max) / 2.0;
+    double cy = (yw_min + yw_max) / 2.0;
+    double theta = -anguloRotacao * M_PI / 180.0;
+
+    Matriz T1 = Matriz::translacao(-cx, -cy);
+    Matriz R = Matriz::rotacao(theta);
+    Matriz T2 = Matriz::translacao(cx, cy);
+    Matriz rotacaoCentro = T2 * R * T1;
+
+    Matriz normalizacao = escalaTranslacao * rotacaoCentro;
+    return normalizacao;
 }
+
