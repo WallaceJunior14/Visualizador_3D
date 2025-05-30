@@ -23,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     displayFile = std::make_shared<DisplayFile>();
+    inicializarObjetosIniciais(displayFile.get());
 
     if (ui->frameDesenho) {
         ui->frameDesenho->definirDisplayFile(displayFile);
@@ -85,6 +86,49 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow() {
     delete ui;
+}
+
+void MainWindow::inicializarObjetosIniciais(DisplayFile* df) {
+    // ----- CASINHA -----
+    QList<Ponto2D> verticesCasa;
+    verticesCasa << Ponto2D(0, 0) << Ponto2D(0, 50)
+                 << Ponto2D(50, 50) << Ponto2D(50, 0)
+                 << Ponto2D(0, 50) << Ponto2D(25, 80) << Ponto2D(50, 50);
+    auto casa = std::make_shared<PoligonoObj>("Casinha", verticesCasa, Qt::darkBlue);
+    df->adicionarObjeto(casa);
+
+    // ----- ÁRVORE -----
+    QList<Ponto2D> verticesArvore;
+    // Tronco (retângulo)
+    verticesArvore << Ponto2D(100, 0) << Ponto2D(100, 30)
+                   << Ponto2D(115, 30) << Ponto2D(115, 0);
+    // Copa (triângulo ou círculo simples com 3 vértices)
+    verticesArvore << Ponto2D(90, 30) << Ponto2D(107.5, 60) << Ponto2D(125, 30);
+    auto arvore = std::make_shared<PoligonoObj>("Árvore", verticesArvore, Qt::darkGreen);
+    df->adicionarObjeto(arvore);
+
+    // ----- CARRO -----
+    QList<Ponto2D> verticesCarro;
+    // Corpo principal (retângulo)
+    verticesCarro << Ponto2D(160, 0) << Ponto2D(160, 20)
+                  << Ponto2D(220, 20) << Ponto2D(220, 0);
+    // Parte superior (parabrisas)
+    verticesCarro << Ponto2D(175, 20) << Ponto2D(190, 35)
+                  << Ponto2D(205, 35) << Ponto2D(215, 20);
+    auto carro = std::make_shared<PoligonoObj>("Carro", verticesCarro, Qt::red);
+    df->adicionarObjeto(carro);
+
+    // ----- SOL -----
+    QList<Ponto2D> verticesSol;
+    // Simulando um "sol" com uma estrela simples (octógono pontudo, estilizado com 8 raios)
+    verticesSol << Ponto2D(300, 50) << Ponto2D(310, 70)
+                << Ponto2D(330, 70) << Ponto2D(320, 90)
+                << Ponto2D(330, 110) << Ponto2D(310, 110)
+                << Ponto2D(300, 130) << Ponto2D(290, 110)
+                << Ponto2D(270, 110) << Ponto2D(280, 90)
+                << Ponto2D(270, 70) << Ponto2D(290, 70);
+    auto sol = std::make_shared<PoligonoObj>("Sol", verticesSol, Qt::yellow);
+    df->adicionarObjeto(sol);
 }
 
 void MainWindow::inicializarUI() {

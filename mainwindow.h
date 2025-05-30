@@ -69,6 +69,9 @@ private:
     void aplicarTranslacaoAtual();
     void aplicarEscalaAtual();
     void aplicarRotacaoAtual();
+
+    // Incializar objetos iniciais
+    void inicializarObjetosIniciais(DisplayFile* df);
 };
 
 #endif // MAINWINDOW_H
