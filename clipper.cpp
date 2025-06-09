@@ -1,97 +1,89 @@
 #include "clipper.h"
 #include <algorithm> // Para std::swap
 
-ClipperCohenSutherland::ClipperCohenSutherland(double xMinNDC, double yMinNDC, double xMaxNDC, double yMaxNDC)
-    : xMinClip(xMinNDC), yMinClip(yMinNDC), xMaxClip(xMaxNDC), yMaxClip(yMaxNDC) {
-    // Garante que min < max
+Clipper3D::Clipper3D(double xMin, double yMin, double zMin, double xMax, double yMax, double zMax)
+    : xMinClip(xMin), yMinClip(yMin), zMinClip(zMin),
+    xMaxClip(xMax), yMaxClip(yMax), zMaxClip(zMax) {
+    // Garante que min < max para todos os eixos
     if (xMinClip > xMaxClip) std::swap(xMinClip, xMaxClip);
     if (yMinClip > yMaxClip) std::swap(yMinClip, yMaxClip);
+    if (zMinClip > zMaxClip) std::swap(zMinClip, zMaxClip);
 }
 
-int ClipperCohenSutherland::calcularCodigoRegiao(const Ponto2D& p) const {
+int Clipper3D::calcularCodigoRegiao(const Ponto3D& p) const {
     int codigo = DENTRO;
-    // Os pontos já estão em SCN (normalizados)
-    // então p.obterX(), p.obterY() são as coordenadas SCN.
-
+    // Os pontos vêm do pipeline MVP e já estão normalizados (NDC)
     if (p.obterX() < xMinClip) codigo |= ESQUERDA;
     else if (p.obterX() > xMaxClip) codigo |= DIREITA;
 
-    if (p.obterY() < yMinClip) codigo |= BAIXO; // Assumindo que yMinClip é "mais baixo" que yMaxClip
+    if (p.obterY() < yMinClip) codigo |= BAIXO;
     else if (p.obterY() > yMaxClip) codigo |= CIMA;
+
+    if (p.obterZ() < zMinClip) codigo |= TRAS;
+    else if (p.obterZ() > zMaxClip) codigo |= FRENTE;
 
     return codigo;
 }
 
-bool ClipperCohenSutherland::cliparReta(Ponto2D& p1, Ponto2D& p2) {
-    // p1 e p2 são pontos em SCN, já normalizados (W=1, exceto pontos no infinito)
+bool Clipper3D::cliparReta(Ponto3D& p1, Ponto3D& p2) {
     int codigo1 = calcularCodigoRegiao(p1);
     int codigo2 = calcularCodigoRegiao(p2);
     bool aceito = false;
 
     while (true) {
-        if ((codigo1 == DENTRO) && (codigo2 == DENTRO)) { // Ambos dentro: aceitação trivial
+        if ((codigo1 == DENTRO) && (codigo2 == DENTRO)) { // Aceitação trivial
             aceito = true;
             break;
-        } else if ((codigo1 & codigo2) != 0) { // Ambos fora na mesma região: rejeição trivial
+        } else if ((codigo1 & codigo2) != 0) { // Rejeição trivial
             break;
-        } else { // Reta precisa ser clipada
+        } else { // Reta precisa ser recortada
             int codigoFora;
-            double x = 0.0, y = 0.0; // Coordenadas do ponto de interseção
+            double x = 0.0, y = 0.0, z = 0.0;
 
-            // Pelo menos um ponto está fora. Escolhe ele.
-            if (codigo1 != DENTRO) {
-                codigoFora = codigo1;
-            } else {
-                codigoFora = codigo2;
-            }
-
-            // Encontra o ponto de interseção usando as equações da reta.
-            // y = y1 + m * (x - x1)
-            // x = x1 + (y - y1) / m
-            // m = (p2.y - p1.y) / (p2.x - p1.x)
+            // Escolhe um ponto que está fora do volume
+            codigoFora = (codigo1 != DENTRO) ? codigo1 : codigo2;
 
             double dx = p2.obterX() - p1.obterX();
             double dy = p2.obterY() - p1.obterY();
+            double dz = p2.obterZ() - p1.obterZ();
 
-            if (codigoFora & CIMA) {           // Ponto acima da janela
-                // Interseção com y = yMaxClip
-                // x = x1 + (yMaxClip - y1) * dx / dy
-                if (dy == 0) { x = p1.obterX() + dx; } // Linha horizontal, pode estar toda fora ou dentro verticalmente
-                else { x = p1.obterX() + (yMaxClip - p1.obterY()) * dx / dy; }
+            // Calcula a interseção da reta com o plano de recorte correspondente
+            if (codigoFora & FRENTE) {           // Interseção com z = zMax
+                x = p1.obterX() + dx * (zMaxClip - p1.obterZ()) / dz;
+                y = p1.obterY() + dy * (zMaxClip - p1.obterZ()) / dz;
+                z = zMaxClip;
+            } else if (codigoFora & TRAS) {      // Interseção com z = zMin
+                x = p1.obterX() + dx * (zMinClip - p1.obterZ()) / dz;
+                y = p1.obterY() + dy * (zMinClip - p1.obterZ()) / dz;
+                z = zMinClip;
+            } else if (codigoFora & CIMA) {      // Interseção com y = yMax
+                x = p1.obterX() + dx * (yMaxClip - p1.obterY()) / dy;
                 y = yMaxClip;
-            } else if (codigoFora & BAIXO) { // Ponto abaixo da janela
-                // Interseção com y = yMinClip
-                // x = x1 + (yMinClip - y1) * dx / dy
-                if (dy == 0) { x = p1.obterX() + dx; }
-                else { x = p1.obterX() + (yMinClip - p1.obterY()) * dx / dy; }
+                z = p1.obterZ() + dz * (yMaxClip - p1.obterY()) / dy;
+            } else if (codigoFora & BAIXO) {     // Interseção com y = yMin
+                x = p1.obterX() + dx * (yMinClip - p1.obterY()) / dy;
                 y = yMinClip;
-            } else if (codigoFora & DIREITA) {  // Ponto à direita da janela
-                // Interseção com x = xMaxClip
-                // y = y1 + (xMaxClip - x1) * dy / dx
-                if (dx == 0) { y = p1.obterY() + dy; } // Linha vertical
-                else { y = p1.obterY() + (xMaxClip - p1.obterX()) * dy / dx; }
+                z = p1.obterZ() + dz * (yMinClip - p1.obterY()) / dy;
+            } else if (codigoFora & DIREITA) {   // Interseção com x = xMax
                 x = xMaxClip;
-            } else if (codigoFora & ESQUERDA) { // Ponto à esquerda da janela
-                // Interseção com x = xMinClip
-                // y = y1 + (xMinClip - x1) * dy / dx
-                if (dx == 0) { y = p1.obterY() + dy; }
-                else { y = p1.obterY() + (xMinClip - p1.obterX()) * dy / dx; }
+                y = p1.obterY() + dy * (xMaxClip - p1.obterX()) / dx;
+                z = p1.obterZ() + dz * (xMaxClip - p1.obterX()) / dx;
+            } else if (codigoFora & ESQUERDA) {  // Interseção com x = xMin
                 x = xMinClip;
+                y = p1.obterY() + dy * (xMinClip - p1.obterX()) / dx;
+                z = p1.obterZ() + dz * (xMinClip - p1.obterX()) / dx;
             } else {
-                // Situação inesperada, deve ter uma borda
+                // Situação inesperada
                 break;
             }
 
-            // Atualiza o ponto que estava fora com o ponto de interseção.
+            // Atualiza o ponto que estava fora com o novo ponto de interseção
+            // e recalcula seu código de região para o próximo loop.
             if (codigoFora == codigo1) {
-                p1.definirX(x);
-                p1.definirY(y);
-                p1.definirW(1.0); // Pontos de interseção são afins
+                p1.definirX(x); p1.definirY(y); p1.definirZ(z);
                 codigo1 = calcularCodigoRegiao(p1);
             } else {
-                p2.definirX(x);
-                p2.definirY(y);
-                p2.definirW(1.0);
+                p2.definirX(x); p2.definirY(y); p2.definirZ(z);
                 codigo2 = calcularCodigoRegiao(p2);
             }
         }

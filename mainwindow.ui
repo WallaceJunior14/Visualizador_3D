@@ -33,10 +33,7 @@
      </size>
     </property>
     <property name="frameShape">
-     <enum>QFrame::Shape::StyledPanel</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Shadow::Raised</enum>
+     <enum>QFrame::NoFrame</enum>
     </property>
    </widget>
    <widget class="QTabWidget" name="tabWidget">
@@ -48,11 +45,11 @@
       <x>1000</x>
       <y>20</y>
       <width>231</width>
-      <height>171</height>
+      <height>361</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tabTranslacao">
      <attribute name="title">
@@ -64,7 +61,7 @@
         <x>10</x>
         <y>20</y>
         <width>201</width>
-        <height>91</height>
+        <height>136</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -82,10 +79,20 @@
        </item>
        <item>
         <layout class="QGridLayout" name="gridLayout">
-         <item row="0" column="0">
-          <widget class="QLabel" name="lblTranslacaoX">
+         <item row="2" column="0">
+          <widget class="QLabel" name="lblTranslacaoZ">
            <property name="text">
-            <string>x</string>
+            <string>z</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QDoubleSpinBox" name="spinTranslacaoY">
+           <property name="minimum">
+            <double>-100.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>100.000000000000000</double>
            </property>
           </widget>
          </item>
@@ -106,15 +113,15 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
-          <widget class="QDoubleSpinBox" name="spinTranslacaoY">
-           <property name="minimum">
-            <double>-100.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>100.000000000000000</double>
+         <item row="0" column="0">
+          <widget class="QLabel" name="lblTranslacaoX">
+           <property name="text">
+            <string>x</string>
            </property>
           </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QDoubleSpinBox" name="spinTranslacaoZ"/>
          </item>
         </layout>
        </item>
@@ -131,24 +138,21 @@
         <x>10</x>
         <y>47</y>
         <width>201</width>
-        <height>61</height>
+        <height>110</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="1">
-        <widget class="QLabel" name="lblEscalaY">
+       <item row="2" column="0">
+        <widget class="QLabel" name="lblEscalaZ">
          <property name="text">
-          <string>y</string>
+          <string>z</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QDoubleSpinBox" name="spinEscalaX">
-         <property name="minimum">
-          <double>-100.000000000000000</double>
-         </property>
-         <property name="maximum">
-          <double>100.000000000000000</double>
+       <item row="0" column="0">
+        <widget class="QLabel" name="lblEscalaX">
+         <property name="text">
+          <string>x</string>
          </property>
         </widget>
        </item>
@@ -162,12 +166,25 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="lblEscalaX">
-         <property name="text">
-          <string>x</string>
+       <item row="1" column="0">
+        <widget class="QDoubleSpinBox" name="spinEscalaX">
+         <property name="minimum">
+          <double>-100.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
          </property>
         </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="lblEscalaY">
+         <property name="text">
+          <string>y</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QDoubleSpinBox" name="spinEscalaZ"/>
        </item>
       </layout>
      </widget>
@@ -200,7 +217,7 @@
         <x>10</x>
         <y>20</y>
         <width>211</width>
-        <height>103</height>
+        <height>290</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_3">
@@ -214,9 +231,6 @@
          </property>
          <property name="maximum">
           <number>180</number>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
          </property>
         </widget>
        </item>
@@ -235,9 +249,6 @@
          <property name="maximum">
           <number>180</number>
          </property>
-         <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
-         </property>
         </widget>
        </item>
        <item row="3" column="0">
@@ -254,9 +265,6 @@
          </property>
          <property name="maximum">
           <number>180</number>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
          </property>
         </widget>
        </item>
@@ -287,9 +295,9 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>20</y>
-      <width>141</width>
-      <height>651</height>
+      <y>10</y>
+      <width>131</width>
+      <height>681</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -332,6 +340,16 @@
       </widget>
      </item>
      <item>
+      <widget class="QLabel" name="lblCoordenadaZ1">
+       <property name="text">
+        <string>Coordenada Z1:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="spinZ1"/>
+     </item>
+     <item>
       <widget class="QLabel" name="lblCoordenadaX2">
        <property name="text">
         <string>Coordenada X2:</string>
@@ -358,6 +376,16 @@
         <double>600.000000000000000</double>
        </property>
       </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="lblCoordenadaZ2">
+       <property name="text">
+        <string>Coordenada Z2:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="spinZ2"/>
      </item>
      <item>
       <widget class="QLabel" name="lblCoordenadaX3">
@@ -394,6 +422,16 @@
       </widget>
      </item>
      <item>
+      <widget class="QLabel" name="lblCoordenadaZ3">
+       <property name="text">
+        <string>Coordenada Z3:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="spinZ3"/>
+     </item>
+     <item>
       <widget class="QLabel" name="lblRaio">
        <property name="text">
         <string>Raio:</string>
@@ -406,6 +444,16 @@
         <double>100.000000000000000</double>
        </property>
       </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="lblTamanho">
+       <property name="text">
+        <string>Tamanho</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="spinTamanho"/>
      </item>
      <item>
       <widget class="QPushButton" name="btnCor">
@@ -482,6 +530,77 @@
     <property name="text">
      <string>Limpar Seleção</string>
     </property>
+   </widget>
+   <widget class="QGroupBox" name="groupBoxNormal">
+    <property name="geometry">
+     <rect>
+      <x>1020</x>
+      <y>480</y>
+      <width>89</width>
+      <height>191</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Vetor Normal</string>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_4">
+     <item>
+      <widget class="QLabel" name="lblNx">
+       <property name="text">
+        <string>Nx</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="spinNx"/>
+     </item>
+     <item>
+      <widget class="QLabel" name="lblNy">
+       <property name="text">
+        <string>Ny</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="spinNy"/>
+     </item>
+     <item>
+      <widget class="QLabel" name="lblNz">
+       <property name="text">
+        <string>Nz</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="spinNz"/>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="layoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>1010</x>
+      <y>410</y>
+      <width>163</width>
+      <height>56</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <item>
+      <widget class="QRadioButton" name="rbTransformarObjeto">
+       <property name="text">
+        <string>Transformar objeto</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="rbTransformarCamera">
+       <property name="text">
+        <string>Transformar camera</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

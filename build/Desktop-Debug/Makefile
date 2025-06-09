@@ -52,33 +52,37 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = ../../circunferencia_obj.cpp \
+SOURCES       = ../../bounding_box.cpp \
+		../../camera.cpp \
+		../../circunferencia_obj.cpp \
 		../../clipper.cpp \
 		../../display_file.cpp \
 		../../frame_desenho.cpp \
-		../../janela_mundo.cpp \
 		../../main.cpp \
 		../../mainwindow.cpp \
 		../../matriz.cpp \
 		../../objeto_grafico.cpp \
 		../../poligono_obj.cpp \
 		../../ponto2d.cpp \
+		../../ponto3d.cpp \
 		../../ponto_obj.cpp \
 		../../reta_obj.cpp \
 		../../transformador_geometrico.cpp \
 		../../viewport_tela.cpp moc_frame_desenho.cpp \
 		moc_mainwindow.cpp
-OBJECTS       = circunferencia_obj.o \
+OBJECTS       = bounding_box.o \
+		camera.o \
+		circunferencia_obj.o \
 		clipper.o \
 		display_file.o \
 		frame_desenho.o \
-		janela_mundo.o \
 		main.o \
 		mainwindow.o \
 		matriz.o \
 		objeto_grafico.o \
 		poligono_obj.o \
 		ponto2d.o \
+		ponto3d.o \
 		ponto_obj.o \
 		reta_obj.o \
 		transformador_geometrico.o \
@@ -163,31 +167,35 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exceptions.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
-		../../../../visualizador_3d.pro ../../circunferencia_obj.h \
+		../../../../visualizador_3d.pro ../../bounding_box.h \
+		../../camera.h \
+		../../circunferencia_obj.h \
 		../../clipper.h \
 		../../display_file.h \
 		../../frame_desenho.h \
-		../../janela_mundo.h \
 		../../mainwindow.h \
 		../../matriz.h \
 		../../objeto_grafico.h \
 		../../poligono_obj.h \
 		../../ponto2d.h \
+		../../ponto3d.h \
 		../../ponto_obj.h \
 		../../reta_obj.h \
 		../../tipos.h \
 		../../transformador_geometrico.h \
-		../../viewport_tela.h ../../circunferencia_obj.cpp \
+		../../viewport_tela.h ../../bounding_box.cpp \
+		../../camera.cpp \
+		../../circunferencia_obj.cpp \
 		../../clipper.cpp \
 		../../display_file.cpp \
 		../../frame_desenho.cpp \
-		../../janela_mundo.cpp \
 		../../main.cpp \
 		../../mainwindow.cpp \
 		../../matriz.cpp \
 		../../objeto_grafico.cpp \
 		../../poligono_obj.cpp \
 		../../ponto2d.cpp \
+		../../ponto3d.cpp \
 		../../ponto_obj.cpp \
 		../../reta_obj.cpp \
 		../../transformador_geometrico.cpp \
@@ -377,8 +385,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../../circunferencia_obj.h ../../clipper.h ../../display_file.h ../../frame_desenho.h ../../janela_mundo.h ../../mainwindow.h ../../matriz.h ../../objeto_grafico.h ../../poligono_obj.h ../../ponto2d.h ../../ponto_obj.h ../../reta_obj.h ../../tipos.h ../../transformador_geometrico.h ../../viewport_tela.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../../circunferencia_obj.cpp ../../clipper.cpp ../../display_file.cpp ../../frame_desenho.cpp ../../janela_mundo.cpp ../../main.cpp ../../mainwindow.cpp ../../matriz.cpp ../../objeto_grafico.cpp ../../poligono_obj.cpp ../../ponto2d.cpp ../../ponto_obj.cpp ../../reta_obj.cpp ../../transformador_geometrico.cpp ../../viewport_tela.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../../bounding_box.h ../../camera.h ../../circunferencia_obj.h ../../clipper.h ../../display_file.h ../../frame_desenho.h ../../mainwindow.h ../../matriz.h ../../objeto_grafico.h ../../poligono_obj.h ../../ponto2d.h ../../ponto3d.h ../../ponto_obj.h ../../reta_obj.h ../../tipos.h ../../transformador_geometrico.h ../../viewport_tela.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../../bounding_box.cpp ../../camera.cpp ../../circunferencia_obj.cpp ../../clipper.cpp ../../display_file.cpp ../../frame_desenho.cpp ../../main.cpp ../../mainwindow.cpp ../../matriz.cpp ../../objeto_grafico.cpp ../../poligono_obj.cpp ../../ponto2d.cpp ../../ponto3d.cpp ../../ponto_obj.cpp ../../reta_obj.cpp ../../transformador_geometrico.cpp ../../viewport_tela.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../../mainwindow.ui $(DISTDIR)/
 
 
@@ -417,10 +425,10 @@ compiler_moc_header_clean:
 moc_frame_desenho.cpp: ../../frame_desenho.h \
 		../../display_file.h \
 		../../objeto_grafico.h \
-		../../ponto2d.h \
+		../../ponto3d.h \
 		../../matriz.h \
 		../../tipos.h \
-		../../janela_mundo.h \
+		../../camera.h \
 		../../viewport_tela.h \
 		../../clipper.h \
 		moc_predefs.h \
@@ -431,10 +439,10 @@ moc_mainwindow.cpp: ../../mainwindow.h \
 		../../frame_desenho.h \
 		../../display_file.h \
 		../../objeto_grafico.h \
-		../../ponto2d.h \
+		../../ponto3d.h \
 		../../matriz.h \
 		../../tipos.h \
-		../../janela_mundo.h \
+		../../camera.h \
 		../../viewport_tela.h \
 		../../clipper.h \
 		moc_predefs.h \
@@ -462,54 +470,62 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean compiler_ui
 
 ####### Compile
 
+bounding_box.o: ../../bounding_box.cpp ../../bounding_box.h \
+		../../ponto3d.h \
+		../../matriz.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o bounding_box.o ../../bounding_box.cpp
+
+camera.o: ../../camera.cpp ../../camera.h \
+		../../ponto3d.h \
+		../../matriz.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o camera.o ../../camera.cpp
+
 circunferencia_obj.o: ../../circunferencia_obj.cpp ../../circunferencia_obj.h \
 		../../objeto_grafico.h \
-		../../ponto2d.h \
+		../../ponto3d.h \
 		../../matriz.h \
-		../../tipos.h
+		../../tipos.h \
+		../../bounding_box.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o circunferencia_obj.o ../../circunferencia_obj.cpp
 
 clipper.o: ../../clipper.cpp ../../clipper.h \
-		../../ponto2d.h \
+		../../ponto3d.h \
 		../../matriz.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o clipper.o ../../clipper.cpp
 
 display_file.o: ../../display_file.cpp ../../display_file.h \
 		../../objeto_grafico.h \
-		../../ponto2d.h \
+		../../ponto3d.h \
 		../../matriz.h \
 		../../tipos.h \
-		../../janela_mundo.h
+		../../camera.h \
+		../../poligono_obj.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o display_file.o ../../display_file.cpp
 
 frame_desenho.o: ../../frame_desenho.cpp ../../frame_desenho.h \
 		../../display_file.h \
 		../../objeto_grafico.h \
-		../../ponto2d.h \
+		../../ponto3d.h \
 		../../matriz.h \
 		../../tipos.h \
-		../../janela_mundo.h \
+		../../camera.h \
 		../../viewport_tela.h \
 		../../clipper.h \
+		../../ponto2d.h \
 		../../ponto_obj.h \
 		../../reta_obj.h \
 		../../poligono_obj.h \
 		../../circunferencia_obj.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o frame_desenho.o ../../frame_desenho.cpp
 
-janela_mundo.o: ../../janela_mundo.cpp ../../janela_mundo.h \
-		../../ponto2d.h \
-		../../matriz.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o janela_mundo.o ../../janela_mundo.cpp
-
 main.o: ../../main.cpp ../../mainwindow.h \
 		../../frame_desenho.h \
 		../../display_file.h \
 		../../objeto_grafico.h \
-		../../ponto2d.h \
+		../../ponto3d.h \
 		../../matriz.h \
 		../../tipos.h \
-		../../janela_mundo.h \
+		../../camera.h \
 		../../viewport_tela.h \
 		../../clipper.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../../main.cpp
@@ -518,10 +534,10 @@ mainwindow.o: ../../mainwindow.cpp ../../mainwindow.h \
 		../../frame_desenho.h \
 		../../display_file.h \
 		../../objeto_grafico.h \
-		../../ponto2d.h \
+		../../ponto3d.h \
 		../../matriz.h \
 		../../tipos.h \
-		../../janela_mundo.h \
+		../../camera.h \
 		../../viewport_tela.h \
 		../../clipper.h \
 		ui_mainwindow.h \
@@ -532,43 +548,53 @@ mainwindow.o: ../../mainwindow.cpp ../../mainwindow.h \
 		../../transformador_geometrico.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o ../../mainwindow.cpp
 
-matriz.o: ../../matriz.cpp ../../matriz.h
+matriz.o: ../../matriz.cpp ../../matriz.h \
+		../../ponto3d.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o matriz.o ../../matriz.cpp
 
 objeto_grafico.o: ../../objeto_grafico.cpp ../../objeto_grafico.h \
-		../../ponto2d.h \
+		../../ponto3d.h \
 		../../matriz.h \
-		../../tipos.h
+		../../tipos.h \
+		../../bounding_box.h \
+		../../camera.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o objeto_grafico.o ../../objeto_grafico.cpp
 
 poligono_obj.o: ../../poligono_obj.cpp ../../poligono_obj.h \
 		../../objeto_grafico.h \
-		../../ponto2d.h \
+		../../ponto3d.h \
 		../../matriz.h \
-		../../tipos.h
+		../../tipos.h \
+		../../bounding_box.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o poligono_obj.o ../../poligono_obj.cpp
 
 ponto2d.o: ../../ponto2d.cpp ../../ponto2d.h \
 		../../matriz.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ponto2d.o ../../ponto2d.cpp
 
+ponto3d.o: ../../ponto3d.cpp ../../ponto3d.h \
+		../../matriz.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ponto3d.o ../../ponto3d.cpp
+
 ponto_obj.o: ../../ponto_obj.cpp ../../ponto_obj.h \
 		../../objeto_grafico.h \
-		../../ponto2d.h \
+		../../ponto3d.h \
 		../../matriz.h \
-		../../tipos.h
+		../../tipos.h \
+		../../bounding_box.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ponto_obj.o ../../ponto_obj.cpp
 
 reta_obj.o: ../../reta_obj.cpp ../../reta_obj.h \
 		../../objeto_grafico.h \
-		../../ponto2d.h \
+		../../ponto3d.h \
 		../../matriz.h \
-		../../tipos.h
+		../../tipos.h \
+		../../bounding_box.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o reta_obj.o ../../reta_obj.cpp
 
 transformador_geometrico.o: ../../transformador_geometrico.cpp ../../transformador_geometrico.h \
 		../../matriz.h \
-		../../ponto2d.h
+		../../ponto3d.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o transformador_geometrico.o ../../transformador_geometrico.cpp
 
 viewport_tela.o: ../../viewport_tela.cpp ../../viewport_tela.h \

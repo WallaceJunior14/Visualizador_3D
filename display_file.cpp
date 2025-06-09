@@ -1,11 +1,12 @@
 #include "display_file.h"
+#include "poligono_obj.h"
 #include <QDebug>
 
 DisplayFile::DisplayFile() {
-    // Cria uma janela/câmera padrão ao inicializar
-    auto janelaDefault = std::make_shared<JanelaMundo>("Câmera Principal", -300, -300, 300, 300);
-    adicionarJanelaMundo(janelaDefault);
-    definirJanelaMundoAtiva(janelaDefault); // Define como ativa
+    // Cria uma câmera padrão ao inicializar
+    auto cameraDefault = std::make_shared<Camera>("Câmera Principal");
+    adicionarCamera(cameraDefault);
+    definirCameraAtiva(cameraDefault);
 }
 
 void DisplayFile::adicionarObjeto(std::shared_ptr<ObjetoGrafico> obj) {
@@ -31,61 +32,105 @@ const QList<std::shared_ptr<ObjetoGrafico>>& DisplayFile::obterObjetos() const {
     return objetos;
 }
 
-// --- Gerenciamento de Janelas/Câmeras ---
-void DisplayFile::adicionarJanelaMundo(std::shared_ptr<JanelaMundo> janela) {
-    if (janela && !buscarJanelaMundo(janela->obterNome())) { // Evita duplicados pelo nome
-        janelasMundo.append(janela);
+// --- Gerenciamento de Câmeras ---
+void DisplayFile::adicionarCamera(std::shared_ptr<Camera> cam) {
+    if (cam && !buscarCamera(cam->obterNome())) {
+        cameras.append(cam);
     }
 }
 
-std::shared_ptr<JanelaMundo> DisplayFile::buscarJanelaMundo(const QString& nome) const {
-    for (const auto& jm : janelasMundo) {
-        if (jm && jm->obterNome() == nome) {
-            return jm;
+std::shared_ptr<Camera> DisplayFile::buscarCamera(const QString& nome) const {
+    for (const auto& cam : cameras) {
+        if (cam && cam->obterNome() == nome) {
+            return cam;
         }
     }
     return nullptr;
 }
 
-const QList<std::shared_ptr<JanelaMundo>>& DisplayFile::obterListaJanelasMundo() const {
-    return janelasMundo;
+const QList<std::shared_ptr<Camera>>& DisplayFile::obterListaCameras() const {
+    return cameras;
 }
 
-void DisplayFile::definirJanelaMundoAtiva(const QString& nome) {
-    std::shared_ptr<JanelaMundo> janela = buscarJanelaMundo(nome);
-    if (janela) {
-        janelaMundoAtiva = janela;
+void DisplayFile::definirCameraAtiva(const QString& nome) {
+    auto cam = buscarCamera(nome);
+    if (cam) {
+        cameraAtiva = cam;
     } else {
-        qWarning() << "DisplayFile: JanelaMundo com nome '" << nome << "' não encontrada para definir como ativa.";
+        qWarning() << "DisplayFile: Câmera com nome '" << nome << "' não encontrada.";
     }
 }
 
-void DisplayFile::definirJanelaMundoAtiva(std::shared_ptr<JanelaMundo> janela) {
-    if (std::find(janelasMundo.begin(), janelasMundo.end(), janela) != janelasMundo.end()) {
-        janelaMundoAtiva = janela;
-    } else if (janela) { // Se a janela não está na lista, mas é válida, adiciona e define como ativa.
-        qWarning() << "DisplayFile: JanelaMundo '" << janela->obterNome() << "' não estava na lista. Adicionando e definindo como ativa.";
-        adicionarJanelaMundo(janela);
-        janelaMundoAtiva = janela;
-    } else {
-        qWarning() << "DisplayFile: Tentativa de definir janelaMundoAtiva nula.";
+void DisplayFile::definirCameraAtiva(std::shared_ptr<Camera> cam) {
+    if (std::find(cameras.begin(), cameras.end(), cam) != cameras.end()) {
+        cameraAtiva = cam;
+    } else if (cam) {
+        adicionarCamera(cam);
+        cameraAtiva = cam;
     }
 }
 
-
-std::shared_ptr<JanelaMundo> DisplayFile::obterJanelaMundoAtiva() const {
-    return janelaMundoAtiva;
+std::shared_ptr<Camera> DisplayFile::obterCameraAtiva() const {
+    return cameraAtiva;
 }
 
-void DisplayFile::recalcularTodosPontosSCN() {
-    if (!janelaMundoAtiva) {
-        qWarning("DisplayFile: Nenhuma JanelaMundo ativa para recalcular SCNs.");
-        return;
+// Método principal do pipeline, agora em 3D.
+void DisplayFile::recalcularTodosOsPontos() {
+    if(!cameraAtiva){
+        qWarning("DisplayFile: Nenhuma câmera ativa para recalcular pontos.");
+            return;
     }
-    Matriz matNorm = janelaMundoAtiva->obterMatrizNormalizacao();
-    for (auto& objeto : objetos) {
-        if (objeto) {
-            objeto->recalcularPontosTransformados(matNorm);
+
+    // Obtém as matrizes View e Projection da câmera ativa
+    Matriz matView = cameraAtiva->obterMatrizView();
+    Matriz matProj = cameraAtiva->obterMatrizProjecao();
+
+    for(auto& objeto: objetos){
+        if (objeto){
+            objeto->recalcularPontos(matView, matProj);
         }
     }
+}
+
+/**
+ * @brief Conta quantos objetos de um determinado tipo existem no DisplayFile.
+ * @param tipo O TipoObjeto a ser contado (PONTO, RETA, POLIGONO, etc.).
+ * @param numVerticesEspecifico Se o tipo for POLIGONO e este valor for > 0,
+ * conta apenas os polígonos com este número exato de vértices (ex: 3 para triângulos).
+ * @return O número de objetos encontrados que correspondem aos critérios.
+ */
+int DisplayFile::contarObjetosPorTipo(TipoObjeto tipo, int numVerticesEspecifico) const
+{
+    // 1. Inicializa o contador.
+    int contagem = 0;
+
+    // 2. Itera sobre todos os objetos gráficos no DisplayFile.
+    for (const auto& objeto : objetos)
+    {
+        // 3. Verifica se o tipo do objeto atual corresponde ao tipo solicitado.
+        if (objeto && objeto->obterTipo() == tipo)
+        {
+            // 4. CASO ESPECIAL: Se estivermos procurando por polígonos com um número específico de vértices.
+            if (tipo == TipoObjeto::POLIGONO && numVerticesEspecifico > 0)
+            {
+                // Tenta converter o ponteiro do objeto base (ObjetoGrafico) para o tipo derivado (PoligonoObj).
+                // dynamic_pointer_cast é a maneira segura de fazer isso com shared_ptr.
+                auto poligono = std::dynamic_pointer_cast<PoligonoObj>(objeto);
+
+                // Se a conversão foi bem-sucedida e o número de vértices corresponde, incrementa a contagem.
+                if (poligono && poligono->obterVertices().size() == numVerticesEspecifico) {
+                    contagem++;
+                }
+            }
+            // 5. CASO PADRÃO: Para todos os outros tipos de objeto, ou para polígonos quando não especificamos
+            // o número de vértices.
+            else
+            {
+                contagem++;
+            }
+        }
+    }
+
+    // 6. Retorna o total da contagem.
+    return contagem;
 }

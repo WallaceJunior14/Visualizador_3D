@@ -22,8 +22,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_MainWindow_t {
-    QByteArrayData data[19];
-    char stringdata0[433];
+    QByteArrayData data[23];
+    char stringdata0[547];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -45,12 +45,16 @@ QT_MOC_LITERAL(9, 178, 25), // "on_btnCarregarOBJ_clicked"
 QT_MOC_LITERAL(10, 204, 31), // "on_spinTranslacaoX_valueChanged"
 QT_MOC_LITERAL(11, 236, 4), // "arg1"
 QT_MOC_LITERAL(12, 241, 31), // "on_spinTranslacaoY_valueChanged"
-QT_MOC_LITERAL(13, 273, 27), // "on_spinEscalaX_valueChanged"
-QT_MOC_LITERAL(14, 301, 5), // "value"
-QT_MOC_LITERAL(15, 307, 27), // "on_spinEscalaY_valueChanged"
-QT_MOC_LITERAL(16, 335, 26), // "on_hsRotacaoX_valueChanged"
-QT_MOC_LITERAL(17, 362, 36), // "on_cbDisplayFile_currentIndex..."
-QT_MOC_LITERAL(18, 399, 33) // "on_cbDFCamera_currentIndexCha..."
+QT_MOC_LITERAL(13, 273, 31), // "on_spinTranslacaoZ_valueChanged"
+QT_MOC_LITERAL(14, 305, 27), // "on_spinEscalaX_valueChanged"
+QT_MOC_LITERAL(15, 333, 5), // "value"
+QT_MOC_LITERAL(16, 339, 27), // "on_spinEscalaY_valueChanged"
+QT_MOC_LITERAL(17, 367, 27), // "on_spinEscalaZ_valueChanged"
+QT_MOC_LITERAL(18, 395, 26), // "on_hsRotacaoX_valueChanged"
+QT_MOC_LITERAL(19, 422, 26), // "on_hsRotacaoY_valueChanged"
+QT_MOC_LITERAL(20, 449, 26), // "on_hsRotacaoZ_valueChanged"
+QT_MOC_LITERAL(21, 476, 36), // "on_cbDisplayFile_currentIndex..."
+QT_MOC_LITERAL(22, 513, 33) // "on_cbDFCamera_currentIndexCha..."
 
     },
     "MainWindow\0on_comboFormas_currentIndexChanged\0"
@@ -62,9 +66,13 @@ QT_MOC_LITERAL(18, 399, 33) // "on_cbDFCamera_currentIndexCha..."
     "on_btnCarregarOBJ_clicked\0"
     "on_spinTranslacaoX_valueChanged\0arg1\0"
     "on_spinTranslacaoY_valueChanged\0"
+    "on_spinTranslacaoZ_valueChanged\0"
     "on_spinEscalaX_valueChanged\0value\0"
     "on_spinEscalaY_valueChanged\0"
+    "on_spinEscalaZ_valueChanged\0"
     "on_hsRotacaoX_valueChanged\0"
+    "on_hsRotacaoY_valueChanged\0"
+    "on_hsRotacaoZ_valueChanged\0"
     "on_cbDisplayFile_currentIndexChanged\0"
     "on_cbDFCamera_currentIndexChanged"
 };
@@ -76,7 +84,7 @@ static const uint qt_meta_data_MainWindow[] = {
        8,       // revision
        0,       // classname
        0,    0, // classinfo
-      14,   14, // methods
+      18,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -84,20 +92,24 @@ static const uint qt_meta_data_MainWindow[] = {
        0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags
-       1,    1,   84,    2, 0x08 /* Private */,
-       4,    0,   87,    2, 0x08 /* Private */,
-       5,    0,   88,    2, 0x08 /* Private */,
-       6,    0,   89,    2, 0x08 /* Private */,
-       7,    0,   90,    2, 0x08 /* Private */,
-       8,    0,   91,    2, 0x08 /* Private */,
-       9,    0,   92,    2, 0x08 /* Private */,
-      10,    1,   93,    2, 0x08 /* Private */,
-      12,    1,   96,    2, 0x08 /* Private */,
-      13,    1,   99,    2, 0x08 /* Private */,
-      15,    1,  102,    2, 0x08 /* Private */,
-      16,    1,  105,    2, 0x08 /* Private */,
-      17,    1,  108,    2, 0x08 /* Private */,
-      18,    1,  111,    2, 0x08 /* Private */,
+       1,    1,  104,    2, 0x08 /* Private */,
+       4,    0,  107,    2, 0x08 /* Private */,
+       5,    0,  108,    2, 0x08 /* Private */,
+       6,    0,  109,    2, 0x08 /* Private */,
+       7,    0,  110,    2, 0x08 /* Private */,
+       8,    0,  111,    2, 0x08 /* Private */,
+       9,    0,  112,    2, 0x08 /* Private */,
+      10,    1,  113,    2, 0x08 /* Private */,
+      12,    1,  116,    2, 0x08 /* Private */,
+      13,    1,  119,    2, 0x08 /* Private */,
+      14,    1,  122,    2, 0x08 /* Private */,
+      16,    1,  125,    2, 0x08 /* Private */,
+      17,    1,  128,    2, 0x08 /* Private */,
+      18,    1,  131,    2, 0x08 /* Private */,
+      19,    1,  134,    2, 0x08 /* Private */,
+      20,    1,  137,    2, 0x08 /* Private */,
+      21,    1,  140,    2, 0x08 /* Private */,
+      22,    1,  143,    2, 0x08 /* Private */,
 
  // slots: parameters
     QMetaType::Void, QMetaType::Int,    3,
@@ -109,9 +121,13 @@ static const uint qt_meta_data_MainWindow[] = {
     QMetaType::Void,
     QMetaType::Void, QMetaType::Double,   11,
     QMetaType::Void, QMetaType::Double,   11,
-    QMetaType::Void, QMetaType::Double,   14,
-    QMetaType::Void, QMetaType::Double,   14,
-    QMetaType::Void, QMetaType::Int,   14,
+    QMetaType::Void, QMetaType::Double,   11,
+    QMetaType::Void, QMetaType::Double,   15,
+    QMetaType::Void, QMetaType::Double,   15,
+    QMetaType::Void, QMetaType::Double,   15,
+    QMetaType::Void, QMetaType::Int,   15,
+    QMetaType::Void, QMetaType::Int,   15,
+    QMetaType::Void, QMetaType::Int,   15,
     QMetaType::Void, QMetaType::Int,    3,
     QMetaType::Void, QMetaType::Int,    3,
 
@@ -133,11 +149,15 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 6: _t->on_btnCarregarOBJ_clicked(); break;
         case 7: _t->on_spinTranslacaoX_valueChanged((*reinterpret_cast< double(*)>(_a[1]))); break;
         case 8: _t->on_spinTranslacaoY_valueChanged((*reinterpret_cast< double(*)>(_a[1]))); break;
-        case 9: _t->on_spinEscalaX_valueChanged((*reinterpret_cast< double(*)>(_a[1]))); break;
-        case 10: _t->on_spinEscalaY_valueChanged((*reinterpret_cast< double(*)>(_a[1]))); break;
-        case 11: _t->on_hsRotacaoX_valueChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 12: _t->on_cbDisplayFile_currentIndexChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 13: _t->on_cbDFCamera_currentIndexChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 9: _t->on_spinTranslacaoZ_valueChanged((*reinterpret_cast< double(*)>(_a[1]))); break;
+        case 10: _t->on_spinEscalaX_valueChanged((*reinterpret_cast< double(*)>(_a[1]))); break;
+        case 11: _t->on_spinEscalaY_valueChanged((*reinterpret_cast< double(*)>(_a[1]))); break;
+        case 12: _t->on_spinEscalaZ_valueChanged((*reinterpret_cast< double(*)>(_a[1]))); break;
+        case 13: _t->on_hsRotacaoX_valueChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 14: _t->on_hsRotacaoY_valueChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 15: _t->on_hsRotacaoZ_valueChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 16: _t->on_cbDisplayFile_currentIndexChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 17: _t->on_cbDFCamera_currentIndexChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
         default: ;
         }
     }
@@ -172,13 +192,13 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 14)
+        if (_id < 18)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 14;
+        _id -= 18;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 14)
+        if (_id < 18)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 14;
+        _id -= 18;
     }
     return _id;
 }

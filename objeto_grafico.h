@@ -3,67 +3,77 @@
 
 #include <QString>
 #include <QList>
-#include <QColor> // Para cor do objeto
-#include "ponto2d.h"
+#include <QColor>
+#include "ponto3d.h"
 #include "matriz.h"
-#include "tipos.h" // Para TipoObjeto
+#include "tipos.h"
 
-// Classe base abstrata para todos os objetos gráficos.
+// Forward declarations para acelerar a compilação e evitar dependências circulares.
+class QPainter;
+class BoundingBox;
+class Camera; // <-- ALTERADO: Substituído Janela por Camera.
+class QRect;  // <-- ADICIONADO: Para definir a área de desenho (viewport).
+
+// Classe base para objetos gráficos em um ambiente 3D.
 // Define a interface comum para manipulação e desenho de objetos.
 class ObjetoGrafico {
 public:
-    // Construtor.
+    // Construtor e Destrutor.
     ObjetoGrafico(const QString& nomeObjeto, TipoObjeto tipoObjeto);
-    // Destrutor virtual para permitir limpeza correta em classes derivadas.
     virtual ~ObjetoGrafico() = default;
 
+    // --- MÉTODOS DE CONTRATO (INTERFACE VIRTUAL PURA) ---
+    // Toda classe filha CONCRETA é OBRIGADA a implementar estes métodos.
 
-    // Getters e Setters.
+    /**
+     * @brief Desenha o objeto na tela dentro de uma viewport específica.
+     * @param painter O QPainter para desenhar.
+     * @param viewport O retângulo da tela onde o desenho ocorrerá.
+     */
+    virtual void desenhar(QPainter* painter, const QRect& viewport) const = 0; // <-- ALTERADO
+
+    /**
+     * @brief Retorna a caixa delimitadora (Bounding Box) do objeto.
+     */
+    virtual BoundingBox obterBBox() const = 0;
+
+
+    // --- MÉTODOS COM IMPLEMENTAÇÃO PADRÃO (PODEM SER SOBRESCRITOS) ---
+
+    /**
+     * @brief Atualiza os pontos de clipping (NDC) a partir da câmera.
+     * @param camera A câmera que define as matrizes de View e Projection.
+     */
+    virtual void recalcularPontos(const Camera& camera);
+
+    /**
+     * @brief Calcula o centro geométrico do objeto 3D.
+     */
+    virtual Ponto3D calcularCentroGeometrico() const;
+
+
+    // --- MÉTODOS COMUNS (NÃO VIRTUAIS) ---
+    // (Nenhuma alteração nesta seção)
     QString obterNome() const;
     void definirNome(const QString& novoNome);
-
     TipoObjeto obterTipo() const;
-
-    const QList<Ponto2D>& obterPontosOriginaisMundo() const;
-    const QList<Ponto2D>& obterPontosMundoTransformados() const;
-    const QList<Ponto2D>& obterPontosSCN() const; // SCN = Sistema de Coordenadas Normalizadas
-
-    const Matriz& obterMatrizTransformacaoAcumulada() const;
-
-    // Aplica uma transformação à matriz acumulada do objeto.
+    const QList<Ponto3D>& obterPontosOriginaisMundo() const;
+    const QList<Ponto3D>& obterPontosClip() const;
+    const Matriz& obterMatrizTransformacao() const;
     void aplicarTransformacao(const Matriz& transformacao);
-
-    // Recalcula os pontos transformados (Mundo e SCN).
-    // A matriz de normalização é necessária para calcular os pontos SCN.
-    void recalcularPontosTransformados(const Matriz& matrizNormalizacao);
-
-    // Define os pontos originais do objeto no sistema de coordenadas do mundo.
-    // Esses são os pontos base antes de qualquer transformação acumulada do objeto.
-    void definirPontosOriginaisMundo(const QList<Ponto2D>& pontos);
-
-    // Adiciona um ponto à lista de pontos originais do mundo.
-    void adicionarPontoOriginalMundo(const Ponto2D& ponto);
-
-    // Calcula o centro geométrico do objeto (baseado nos pontos originais do mundo).
-    // Útil para transformações como escala/rotação em torno do centro.
-    virtual Ponto2D calcularCentroGeometrico() const;
-
-    // Cor do objeto
+    void definirPontosOriginaisMundo(const QList<Ponto3D>& pontos);
+    void adicionarPontoOriginalMundo(const Ponto3D& ponto);
     QColor obterCor() const;
     void definirCor(const QColor& novaCor);
 
-
 protected:
+    // (Nenhuma alteração nesta seção)
     QString nome;
     TipoObjeto tipo;
-    QList<Ponto2D> pontosOriginaisMundo;      // Pontos de definição no espaço do mundo
-    Matriz matrizTransformacaoAcumulada;      // Matriz de transformação acumulada do objeto
-    QColor cor;                               // Cor para desenhar o objeto
-
-    // Pontos calculados para renderização
-    QList<Ponto2D> pontosMundoTransformados;  // pontosOriginaisMundo * matrizTransformacaoAcumulada
-    QList<Ponto2D> pontosSCN;                 // matrizNormalizacao * pontosMundoTransformados
-    // Estes são os pontos que serão usados para clipping e depois viewport.
+    QColor cor;
+    QList<Ponto3D> pontosOriginaisMundo;
+    Matriz matrizTransformacao;
+    QList<Ponto3D> pontosClip;
 };
 
 #endif // OBJETO_GRAFICO_H

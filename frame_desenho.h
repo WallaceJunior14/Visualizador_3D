@@ -5,9 +5,9 @@
 #include <QPainter>
 #include <memory>
 #include "display_file.h"
-#include "janela_mundo.h"
+#include "camera.h"           // Alterado
 #include "viewport_tela.h"
-#include "clipper.h"
+#include "clipper.h"        // Alterado
 #include <cmath>
 
 class FrameDesenho : public QFrame {
@@ -18,8 +18,7 @@ public:
     ~FrameDesenho();
 
     void definirDisplayFile(std::shared_ptr<DisplayFile> df);
-    std::shared_ptr<JanelaMundo> obterJanelaMundo() const;
-    std::shared_ptr<JanelaMundo> obterJanelaMundoAtiva() const;
+    std::shared_ptr<Camera> obterCameraAtiva() const; // Alterado
 
     void atualizarViewport();
     void redesenhar();
@@ -30,19 +29,11 @@ protected:
 
 private:
     std::shared_ptr<DisplayFile> displayFile;
-    std::shared_ptr<ViewportTela> viewportTela; // A viewport com as coordenadas de tela
-    std::unique_ptr<ClipperCohenSutherland> clipper;
+    std::shared_ptr<ViewportTela> viewportTela;
+    std::unique_ptr<Clipper3D> clipper; // Alterado
 
     void desenharObjeto(QPainter& painter, std::shared_ptr<ObjetoGrafico> objeto, const Matriz& matViewport);
-
     void desenharDetalhesDaViewport(QPainter& painter);
-
-public:
-    int calcularCodigoRegiaoPonto(const Ponto2D& p) const {
-        if(clipper) return clipper->calcularCodigoRegiao(p);
-        return -1;
-    }
-    static const int CODIGO_REGIAO_DENTRO = 0;
 };
 
 #endif // FRAME_DESENHO_H

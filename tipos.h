@@ -7,6 +7,7 @@ enum class TipoObjeto {
     RETA,
     POLIGONO,
     CIRCUNFERENCIA,
+    CUBO,
     INDEFINIDO
 };
 

@@ -1,86 +1,72 @@
 #include "objeto_grafico.h"
-#include <numeric> // Para std::accumulate (se necessário para centroide mais complexo)
+#include "bounding_box.h" // Incluído para implementação padrão de BBox
+#include "camera.h"
 
+// Construtor inicializa com uma matriz de transformação identidade 4x4.
 ObjetoGrafico::ObjetoGrafico(const QString& nomeObjeto, TipoObjeto tipoObjeto)
-    : nome(nomeObjeto), tipo(tipoObjeto), matrizTransformacaoAcumulada(Matriz::identidade(3)), cor(Qt::black) {}
+    : nome(nomeObjeto),
+    tipo(tipoObjeto),
+    matrizTransformacao(Matriz::identidade(4)), // Nome da matriz atualizado
+    cor(Qt::black) {}
 
-QString ObjetoGrafico::obterNome() const {
-    return nome;
-}
+// --- MÉTODOS COMUNS ---
 
-void ObjetoGrafico::definirNome(const QString& novoNome) {
-    nome = novoNome;
-}
+QString ObjetoGrafico::obterNome() const { return nome; }
+void ObjetoGrafico::definirNome(const QString& novoNome) { nome = novoNome; }
+TipoObjeto ObjetoGrafico::obterTipo() const { return tipo; } // Não precisa ser virtual
+const QList<Ponto3D>& ObjetoGrafico::obterPontosOriginaisMundo() const { return pontosOriginaisMundo; }
+const QList<Ponto3D>& ObjetoGrafico::obterPontosClip() const { return pontosClip; }
+const Matriz& ObjetoGrafico::obterMatrizTransformacao() const { return matrizTransformacao; } // Nome do método atualizado
+QColor ObjetoGrafico::obterCor() const { return cor; }
+void ObjetoGrafico::definirCor(const QColor& novaCor) { cor = novaCor; }
+void ObjetoGrafico::definirPontosOriginaisMundo(const QList<Ponto3D>& pontos) { pontosOriginaisMundo = pontos; }
+void ObjetoGrafico::adicionarPontoOriginalMundo(const Ponto3D& ponto) { pontosOriginaisMundo.append(ponto); }
 
-TipoObjeto ObjetoGrafico::obterTipo() const {
-    return tipo;
-}
-
-const QList<Ponto2D>& ObjetoGrafico::obterPontosOriginaisMundo() const {
-    return pontosOriginaisMundo;
-}
-
-const QList<Ponto2D>& ObjetoGrafico::obterPontosMundoTransformados() const {
-    return pontosMundoTransformados;
-}
-
-const QList<Ponto2D>& ObjetoGrafico::obterPontosSCN() const {
-    return pontosSCN;
-}
-
-const Matriz& ObjetoGrafico::obterMatrizTransformacaoAcumulada() const {
-    return matrizTransformacaoAcumulada;
-}
-
+// Aplica uma nova transformação à matriz de modelo existente.
 void ObjetoGrafico::aplicarTransformacao(const Matriz& transformacao) {
-    matrizTransformacaoAcumulada = transformacao * matrizTransformacaoAcumulada;
+    // A ordem T_nova * T_antiga aplica a 'transformacao' em relação ao sistema de coordenadas do mundo.
+    matrizTransformacao = transformacao * matrizTransformacao;
 }
 
-void ObjetoGrafico::recalcularPontosTransformados(const Matriz& matrizNormalizacao) {
-    pontosMundoTransformados.clear();
-    for (const Ponto2D& pOrig : pontosOriginaisMundo) {
-        Matriz pMat = matrizTransformacaoAcumulada * pOrig; // pOrig já é uma Matriz 3x1
-        pontosMundoTransformados.append(Ponto2D(pMat));
+
+// --- MÉTODOS VIRTUAIS COM IMPLEMENTAÇÃO PADRÃO ---
+
+/**
+ * @brief Implementação padrão para recalcular pontos.
+ * Esta função é tão genérica que TODAS as suas classes filhas podem usá-la
+ * sem precisar de uma implementação própria.
+ */
+void ObjetoGrafico::recalcularPontos(const Camera& camera) { // <-- ALTERADO: Assinatura da função
+    pontosClip.clear();
+
+    // Obtém as matrizes diretamente do objeto Camera
+    Matriz matView = camera.obterMatrizView();
+    Matriz matProj = camera.obterMatrizProjecao();
+
+    // Pré-calcula a matriz Model-View-Projection (MVP)
+    // A lógica interna permanece a mesma
+    Matriz matMVP = matProj * matView * matrizTransformacao;
+
+    for (const Ponto3D& pOrig : pontosOriginaisMundo) {
+        // Aplica a transformação completa
+        Ponto3D pontoEmClip = matMVP * pOrig;
+        // Normaliza (divisão por W) para ir de Coordenadas Homogêneas para NDC
+        pontoEmClip.normalizar();
+        pontosClip.append(pontoEmClip);
     }
-
-    pontosSCN.clear();
-    for (const Ponto2D& pMundoTransf : pontosMundoTransformados) {
-        Matriz pMatSCN = matrizNormalizacao * pMundoTransf;
-        Ponto2D pontoSCN_temp(pMatSCN);
-        pontoSCN_temp.normalizar(); // Garante que w=1 se não for ponto no infinito
-        pontosSCN.append(pontoSCN_temp);
-    }
 }
 
-void ObjetoGrafico::definirPontosOriginaisMundo(const QList<Ponto2D>& pontos) {
-    pontosOriginaisMundo = pontos;
-    // Após definir novos pontos, a matriz de transformação acumulada não é resetada,
-    // mas os pontos transformados precisam ser recalculados.
-}
-
-void ObjetoGrafico::adicionarPontoOriginalMundo(const Ponto2D& ponto) {
-    pontosOriginaisMundo.append(ponto);
-}
-
-Ponto2D ObjetoGrafico::calcularCentroGeometrico() const {
+/**
+ * @brief Implementação padrão para calcular o centro geométrico.
+ * Funciona bem para polígonos e nuvens de pontos.
+ */
+Ponto3D ObjetoGrafico::calcularCentroGeometrico() const {
     if (pontosOriginaisMundo.isEmpty()) {
-        return Ponto2D(0, 0); // Ou lançar exceção
+        return Ponto3D(0, 0, 0);
     }
-
-    double somaX = 0.0;
-    double somaY = 0.0;
-    for (const Ponto2D& p : pontosOriginaisMundo) {
-        somaX += p.obterX(); // Usa obterX() que considera a normalização por W, embora para pontos originais W seja 1.
-        somaY += p.obterY();
+    Ponto3D soma; // Inicializa com (0,0,0)
+    for (const Ponto3D& p : pontosOriginaisMundo) {
+        soma = soma + p;
     }
-    int numPontos = pontosOriginaisMundo.size();
-    return Ponto2D(somaX / numPontos, somaY / numPontos);
-}
-
-QColor ObjetoGrafico::obterCor() const {
-    return cor;
-}
-
-void ObjetoGrafico::definirCor(const QColor& novaCor) {
-    cor = novaCor;
+    return soma / pontosOriginaisMundo.size();
 }
