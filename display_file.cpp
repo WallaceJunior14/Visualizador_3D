@@ -87,7 +87,8 @@ void DisplayFile::recalcularTodosOsPontos() {
 
     for(auto& objeto: objetos){
         if (objeto){
-            objeto->recalcularPontos(matView, matProj);
+            // CORREÇÃO: Passa a câmera, não as matrizes separadas.
+            objeto->recalcularPontos(*cameraAtiva);
         }
     }
 }

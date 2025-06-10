@@ -8,6 +8,7 @@
 #include "circunferencia_obj.h"
 #include "transformador_geometrico.h"
 #include "ponto3d.h"
+#include "gerenciadorobjetosdialog.h"
 
 #include <QColorDialog>
 #include <QMessageBox>
@@ -255,10 +256,8 @@ void MainWindow::gerenciarVisibilidadeSpinners(const QString& tipoForma) {
 
     // Tamanho (para Cubo) - Reutilizando os controles de Raio
     ui->lblTamanho->setVisible(mostrarTamanho); // Supondo um novo QLabel "Tamanho"
-    ui->spinTamanho->setVisible(mostrarTamanho); // Supondo um novo QDoubleSpinBox "spinTamanho"
+    ui->spinTamanho->setVisible(mostrarTamanho); // Supondo um novo QDoubleSpinBox "spinTamanho
 
-    // Vetor Normal (para Circunferência)
-    ui->groupBoxNormal->setVisible(mostrarNormal); // Supondo que os spins Nx, Ny, Nz estão em um GroupBox
 }
 
 void MainWindow::atualizarCbDisplayFile() {
@@ -1038,5 +1037,31 @@ void MainWindow::on_btnLimparSelecao_clicked(){
 
 void MainWindow::on_btnCarregarOBJ_clicked() {
     QMessageBox::information(this, "Carregar", "Funcionalidade de carregar arquivo ainda não implementada completamente.");
+}
+
+
+void MainWindow::on_btnCriarForma_clicked()
+{
+    // 1. Abre o diálogo no modo de criação
+    GerenciadorObjetosDialog dialog(this->displayFile, this); // Passa o DisplayFile
+
+    // 2. .exec() pausa a MainWindow e mostra o diálogo
+    if (dialog.exec() == QDialog::Accepted) {
+        // 3. Se o usuário clicou "OK", pega o objeto que foi criado dentro do diálogo
+        auto novoObjeto = dialog.obterObjetoResultante();
+
+        // 4. Se um objeto foi de fato criado, ADICIONA-O AO DISPLAYFILE DA MAINWINDOW
+        if (novoObjeto) {
+            displayFile->adicionarObjeto(novoObjeto);
+
+            // 5. Atualiza a UI da MainWindow para refletir a mudança
+            // Ex: As ComboBoxes que listam objetos
+            // updateComboBoxes();
+
+            // 6. Manda redesenhar a cena
+            ui->frameDesenho->redesenhar();
+            atualizarCbDisplayFile();
+        }
+    }
 }
 

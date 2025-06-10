@@ -43,13 +43,12 @@ void ObjetoGrafico::recalcularPontos(const Camera& camera) { // <-- ALTERADO: As
     Matriz matView = camera.obterMatrizView();
     Matriz matProj = camera.obterMatrizProjecao();
 
-    // Pré-calcula a matriz Model-View-Projection (MVP)
-    // A lógica interna permanece a mesma
     Matriz matMVP = matProj * matView * matrizTransformacao;
 
     for (const Ponto3D& pOrig : pontosOriginaisMundo) {
-        // Aplica a transformação completa
+        // Aplica a transformação completa pré-calculada
         Ponto3D pontoEmClip = matMVP * pOrig;
+
         // Normaliza (divisão por W) para ir de Coordenadas Homogêneas para NDC
         pontoEmClip.normalizar();
         pontosClip.append(pontoEmClip);

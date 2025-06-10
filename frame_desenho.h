@@ -34,6 +34,8 @@ private:
 
     void desenharObjeto(QPainter& painter, std::shared_ptr<ObjetoGrafico> objeto, const Matriz& matViewport);
     void desenharDetalhesDaViewport(QPainter& painter);
+    void desenharEixosCoordenadas(QPainter& painter, const Matriz& matViewProj, const Matriz& matViewport);
+
 };
 
 #endif // FRAME_DESENHO_H

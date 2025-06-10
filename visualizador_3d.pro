@@ -15,6 +15,7 @@ SOURCES += \
     clipper.cpp \
     display_file.cpp \
     frame_desenho.cpp \
+    gerenciadorobjetosdialog.cpp \
     main.cpp \
     mainwindow.cpp \
     matriz.cpp \
@@ -34,6 +35,7 @@ HEADERS += \
     clipper.h \
     display_file.h \
     frame_desenho.h \
+    gerenciadorobjetosdialog.h \
     mainwindow.h \
     matriz.h \
     objeto_grafico.h \
@@ -47,6 +49,7 @@ HEADERS += \
     viewport_tela.h
 
 FORMS += \
+    gerenciadorobjetosdialog.ui \
     mainwindow.ui
 
 # Default rules for deployment.

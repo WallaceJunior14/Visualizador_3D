@@ -53,6 +53,7 @@ Matriz Camera::obterMatrizProjecao() const {
     }
 }
 
+
 QString Camera::obterNome() const {
     return nome;
 }

@@ -46,6 +46,8 @@ private slots:
     void on_cbDisplayFile_currentIndexChanged(int index);
     void on_cbDFCamera_currentIndexChanged(int index);
 
+    void on_btnCriarForma_clicked();
+
 private:
     Ui::MainWindow *ui;
     std::shared_ptr<DisplayFile> displayFile;

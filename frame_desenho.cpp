@@ -76,20 +76,25 @@ void FrameDesenho::paintEvent(QPaintEvent *event) {
 
     // --- CORAÇÃO DO PIPELINE 3D ---
     // 1. Recalcula todos os pontos, aplicando o pipeline MVP (Model-View-Projection)
-    //    Isso popula a lista `pontosClip` de cada objeto com coordenadas 3D em NDC.
     displayFile->recalcularTodosOsPontos();
 
-    // 2. Obtém a matriz de transformação da Viewport (NDC -> Tela)
+    // 2. Obtém as matrizes essenciais uma única vez
+    Matriz matView = cameraAtiva->obterMatrizView();
+    Matriz matProj = cameraAtiva->obterMatrizProjecao();
+    Matriz matViewProj = matProj * matView; // Matriz combinada para eixos e labels
     Matriz matViewport = viewportTela->obterMatrizTransformacaoViewport();
 
-    // 3. Desenha cada objeto
+    // 3. NOVO: Desenha os eixos de coordenadas do mundo
+    desenharEixosCoordenadas(painter, matViewProj, matViewport);
+
+    // 4. Desenha cada objeto do DisplayFile
     for (const auto& objeto : displayFile->obterObjetos()) {
         if (objeto) {
             desenharObjeto(painter, objeto, matViewport);
         }
     }
 
-    // 4. Desenha a borda da viewport e outros detalhes (overlay 2D)
+    // 5. Desenha a borda da viewport e a nova legenda
     desenharDetalhesDaViewport(painter);
 }
 
@@ -154,33 +159,96 @@ void FrameDesenho::desenharObjeto(QPainter& painter, std::shared_ptr<ObjetoGrafi
 // Esta função não precisa de grandes alterações, pois opera em um overlay 2D.
 void FrameDesenho::desenharDetalhesDaViewport(QPainter& painter) {
     if (!viewportTela || viewportTela->obterLargura() <= 0) return;
+
     QRect vpRect = viewportTela->obterRect();
-    painter.save();
+    painter.save(); // Salva o estado do painter
+
+    // Desenha a borda vermelha da viewport
     QPen bordaPen(Qt::red, 1, Qt::SolidLine);
     painter.setPen(bordaPen);
     painter.setBrush(Qt::NoBrush);
     painter.drawRect(vpRect.adjusted(0, 0, -1, -1));
-    painter.restore();
+
+    // NOVO: Desenha a legenda "Viewport"
+    QPoint legendaPos(vpRect.center().x(), vpRect.top() - 5); // 5 pixels acima do centro do topo
+    painter.setPen(Qt::black);
+    painter.setFont(QFont("Arial", 9));
+    // Alinha o texto para que a posição seja o centro inferior da caixa de texto
+    painter.drawText(QRect(legendaPos - QPoint(50, 20), QSize(100, 20)), Qt::AlignCenter, "Viewport");
+
+    painter.restore(); // Restaura o estado do painter
 }
 
-/*
-Com a modificação da classe FrameDesenho, você completou a migração de todo o seu pipeline de renderização para 3D.
+void FrameDesenho::desenharEixosCoordenadas(QPainter& painter, const Matriz& matViewProj, const Matriz& matViewport)
+{
+    const double tamanhoEixo = 10000.0;
+    const double distanciaLabel = 60.0; // Distância 3D da origem para posicionar as labels X e Y
 
-Resumo do Novo Pipeline 3D:
+    struct Eixo {
+        Ponto3D direcao;
+        QString label;
+    };
 
-FrameDesenho::paintEvent é chamado.
-Ele obtém a Camera ativa do DisplayFile.
-Ele chama displayFile->recalcularTodosOsPontos().
-Dentro disso, para cada ObjetoGrafico:
-O método objeto->recalcularPontos(view, projection) é executado.
-Isso calcula MVP * PontoOriginal e armazena o resultado 3D normalizado (após divisão por W) na lista pontosClip.
-De volta ao paintEvent, ele obtém a matViewport.
-Ele itera sobre cada objeto e chama desenharObjeto.
-desenharObjeto:
-Pega os pontosClip (que são Ponto3D).
-Usa o Clipper3D para recortar as primitivas (pontos, arestas) contra o volume canônico 3D.
-Descarta a coordenada Z dos pontos recortados, projetando-os em um plano 2D.
-Usa a matViewport para transformar esses pontos 2D para as coordenadas da tela.
-Usa o QPainter para desenhar os pixels finais.
-Seu sistema agora é um renderizador 3D de wireframe completo. Os próximos passos poderiam envolver a implementação de um Z-buffer para renderização de superfícies preenchidas, iluminação, ou controles de câmera mais complexos.
-*/
+    Eixo eixos[3] = {
+        { {1, 0, 0}, "Eixo X" },
+        { {0, 1, 0}, "Eixo Y" },
+        { {0, 0, 1}, "Eixo Z" }
+    };
+
+    QPen penEixo(Qt::gray, 1, Qt::DotLine);
+    painter.setFont(QFont("Arial", 9));
+
+    for (const auto& eixo : eixos) {
+        // --- 1. Projeta e desenha o eixo ---
+        Ponto3D p0_mundo = eixo.direcao * -tamanhoEixo;
+        Ponto3D p1_mundo = eixo.direcao * tamanhoEixo;
+
+        Ponto3D p0_ndc = matViewProj * p0_mundo;
+        Ponto3D p1_ndc = matViewProj * p1_mundo;
+        p0_ndc.normalizar();
+        p1_ndc.normalizar();
+
+        if (clipper->cliparReta(p0_ndc, p1_ndc)) {
+            double p0_tela_x = matViewport(0,0) * p0_ndc.obterX() + matViewport(0,2);
+            double p0_tela_y = matViewport(1,1) * p0_ndc.obterY() + matViewport(1,2);
+            double p1_tela_x = matViewport(0,0) * p1_ndc.obterX() + matViewport(0,2);
+            double p1_tela_y = matViewport(1,1) * p1_ndc.obterY() + matViewport(1,2);
+
+            QPoint p0_tela(qRound(p0_tela_x), qRound(p0_tela_y));
+            QPoint p1_tela(qRound(p1_tela_x), qRound(p1_tela_y));
+
+            painter.setPen(penEixo);
+            painter.drawLine(p0_tela, p1_tela);
+
+            // --- 2. Desenha a legenda ---
+            painter.setPen(Qt::gray);
+
+            // Posição da label em 3D, próximo à extremidade positiva do eixo
+            Ponto3D label_mundo;
+
+            if (eixo.label == "Eixo Z") {
+                // Para o Z, calcula o ponto 3D central no eixo
+                label_mundo = eixo.direcao * (tamanhoEixo * 0.5);
+            } else {
+                // Para X e Y, calcula uma posição mais próxima da extremidade positiva
+                label_mundo = eixo.direcao * distanciaLabel;
+            }
+
+            Ponto3D label_ndc = matViewProj * label_mundo;
+            label_ndc.normalizar();
+
+            if (clipper->calcularCodigoRegiao(label_ndc) == Clipper3D::DENTRO) {
+                double tela_x = matViewport(0,0) * label_ndc.obterX() + matViewport(0,2);
+                double tela_y = matViewport(1,1) * label_ndc.obterY() + matViewport(1,2);
+
+                int deslocX = 0;
+                int deslocY = -8;
+
+                if (eixo.label == "Eixo X") deslocX = 6;
+                if (eixo.label == "Eixo Z") deslocY = 6;
+
+                painter.drawText(QPointF(tela_x + deslocX, tela_y + deslocY), eixo.label);
+            }
+        }
+    }
+}

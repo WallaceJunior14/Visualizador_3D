@@ -48,30 +48,42 @@ bool Clipper3D::cliparReta(Ponto3D& p1, Ponto3D& p2) {
             double dz = p2.obterZ() - p1.obterZ();
 
             // Calcula a interseção da reta com o plano de recorte correspondente
-            if (codigoFora & FRENTE) {           // Interseção com z = zMax
-                x = p1.obterX() + dx * (zMaxClip - p1.obterZ()) / dz;
-                y = p1.obterY() + dy * (zMaxClip - p1.obterZ()) / dz;
+            if (codigoFora & FRENTE) {
+                if (dz != 0.0) { // <-- VERIFICAÇÃO
+                    x = p1.obterX() + dx * (zMaxClip - p1.obterZ()) / dz;
+                    y = p1.obterY() + dy * (zMaxClip - p1.obterZ()) / dz;
+                }
                 z = zMaxClip;
-            } else if (codigoFora & TRAS) {      // Interseção com z = zMin
-                x = p1.obterX() + dx * (zMinClip - p1.obterZ()) / dz;
-                y = p1.obterY() + dy * (zMinClip - p1.obterZ()) / dz;
+            } else if (codigoFora & TRAS) {
+                if (dz != 0.0) { // <-- VERIFICAÇÃO
+                    x = p1.obterX() + dx * (zMinClip - p1.obterZ()) / dz;
+                    y = p1.obterY() + dy * (zMinClip - p1.obterZ()) / dz;
+                }
                 z = zMinClip;
-            } else if (codigoFora & CIMA) {      // Interseção com y = yMax
-                x = p1.obterX() + dx * (yMaxClip - p1.obterY()) / dy;
+            } else if (codigoFora & CIMA) {
+                if (dy != 0.0) { // <-- VERIFICAÇÃO
+                    x = p1.obterX() + dx * (yMaxClip - p1.obterY()) / dy;
+                    z = p1.obterZ() + dz * (yMaxClip - p1.obterY()) / dy;
+                }
                 y = yMaxClip;
-                z = p1.obterZ() + dz * (yMaxClip - p1.obterY()) / dy;
-            } else if (codigoFora & BAIXO) {     // Interseção com y = yMin
-                x = p1.obterX() + dx * (yMinClip - p1.obterY()) / dy;
+            } else if (codigoFora & BAIXO) {
+                if (dy != 0.0) { // <-- VERIFICAÇÃO
+                    x = p1.obterX() + dx * (yMinClip - p1.obterY()) / dy;
+                    z = p1.obterZ() + dz * (yMinClip - p1.obterY()) / dy;
+                }
                 y = yMinClip;
-                z = p1.obterZ() + dz * (yMinClip - p1.obterY()) / dy;
-            } else if (codigoFora & DIREITA) {   // Interseção com x = xMax
+            } else if (codigoFora & DIREITA) {
+                if (dx != 0.0) { // <-- VERIFICAÇÃO
+                    y = p1.obterY() + dy * (xMaxClip - p1.obterX()) / dx;
+                    z = p1.obterZ() + dz * (xMaxClip - p1.obterX()) / dx;
+                }
                 x = xMaxClip;
-                y = p1.obterY() + dy * (xMaxClip - p1.obterX()) / dx;
-                z = p1.obterZ() + dz * (xMaxClip - p1.obterX()) / dx;
-            } else if (codigoFora & ESQUERDA) {  // Interseção com x = xMin
+            } else if (codigoFora & ESQUERDA) {
+                if (dx != 0.0) { // <-- VERIFICAÇÃO
+                    y = p1.obterY() + dy * (xMinClip - p1.obterX()) / dx;
+                    z = p1.obterZ() + dz * (xMinClip - p1.obterX()) / dx;
+                }
                 x = xMinClip;
-                y = p1.obterY() + dy * (xMinClip - p1.obterX()) / dx;
-                z = p1.obterZ() + dz * (xMinClip - p1.obterX()) / dx;
             } else {
                 // Situação inesperada
                 break;
