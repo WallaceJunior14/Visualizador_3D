@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1248</width>
-    <height>884</height>
+    <height>739</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,10 +20,10 @@
    <widget class="FrameDesenho" name="frameDesenho">
     <property name="geometry">
      <rect>
-      <x>180</x>
+      <x>270</x>
       <y>20</y>
-      <width>800</width>
-      <height>600</height>
+      <width>941</width>
+      <height>641</height>
      </rect>
     </property>
     <property name="minimumSize">
@@ -42,7 +42,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>1000</x>
+      <x>20</x>
       <y>20</y>
       <width>231</width>
       <height>251</height>
@@ -60,7 +60,7 @@
        <rect>
         <x>10</x>
         <y>20</y>
-        <width>201</width>
+        <width>210</width>
         <height>141</height>
        </rect>
       </property>
@@ -121,7 +121,11 @@
           </widget>
          </item>
          <item row="3" column="0">
-          <widget class="QDoubleSpinBox" name="spinTranslacaoZ"/>
+          <widget class="QDoubleSpinBox" name="spinTranslacaoZ">
+           <property name="minimum">
+            <double>-100000.000000000000000</double>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -304,13 +308,13 @@
      <attribute name="title">
       <string>Vt. N</string>
      </attribute>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>10</x>
         <y>20</y>
         <width>201</width>
-        <height>131</height>
+        <height>145</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_8">
@@ -379,9 +383,9 @@
    <widget class="QPushButton" name="btnCarregarOBJ">
     <property name="geometry">
      <rect>
-      <x>1000</x>
-      <y>420</y>
-      <width>231</width>
+      <x>1050</x>
+      <y>680</y>
+      <width>161</width>
       <height>27</height>
      </rect>
     </property>
@@ -392,9 +396,9 @@
    <widget class="QComboBox" name="cbDisplayFile">
     <property name="geometry">
      <rect>
-      <x>380</x>
-      <y>640</y>
-      <width>481</width>
+      <x>470</x>
+      <y>680</y>
+      <width>451</width>
       <height>28</height>
      </rect>
     </property>
@@ -402,8 +406,8 @@
    <widget class="QComboBox" name="cbDFCameras">
     <property name="geometry">
      <rect>
-      <x>180</x>
-      <y>640</y>
+      <x>270</x>
+      <y>680</y>
       <width>191</width>
       <height>27</height>
      </rect>
@@ -412,8 +416,8 @@
    <widget class="QPushButton" name="btnLimparSelecao">
     <property name="geometry">
      <rect>
-      <x>870</x>
-      <y>640</y>
+      <x>930</x>
+      <y>680</y>
       <width>111</width>
       <height>27</height>
      </rect>
@@ -425,7 +429,7 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>1000</x>
+      <x>20</x>
       <y>290</y>
       <width>231</width>
       <height>58</height>
@@ -451,7 +455,7 @@
    <widget class="QPushButton" name="btnCriarForma">
     <property name="geometry">
      <rect>
-      <x>1000</x>
+      <x>20</x>
       <y>370</y>
       <width>231</width>
       <height>27</height>
@@ -460,200 +464,6 @@
     <property name="text">
      <string>Criar Forma</string>
     </property>
-   </widget>
-   <widget class="QWidget" name="layoutWidget_5">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>20</y>
-      <width>131</width>
-      <height>835</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QLabel" name="lblForma">
-       <property name="text">
-        <string>Forma:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="comboFormas"/>
-     </item>
-     <item>
-      <widget class="QLabel" name="lblCoordenadaX1">
-       <property name="text">
-        <string>Coordenada X1:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="spinX1">
-       <property name="maximum">
-        <double>600.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="lblCoordenadaY1">
-       <property name="text">
-        <string>Coodernada Y1:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="spinY1">
-       <property name="maximum">
-        <double>600.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="lblCoordenadaZ1">
-       <property name="text">
-        <string>Coordenada Z1:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="spinZ1"/>
-     </item>
-     <item>
-      <widget class="QLabel" name="lblCoordenadaX2">
-       <property name="text">
-        <string>Coordenada X2:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="spinX2">
-       <property name="maximum">
-        <double>600.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="lblCoordenadaY2">
-       <property name="text">
-        <string>Coodernada Y2:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="spinY2">
-       <property name="maximum">
-        <double>600.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="lblCoordenadaZ2">
-       <property name="text">
-        <string>Coordenada Z2:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="spinZ2"/>
-     </item>
-     <item>
-      <widget class="QLabel" name="lblCoordenadaX3">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="text">
-        <string>Coordenada X3:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="spinX3">
-       <property name="maximum">
-        <double>600.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="lblCoordenadaY3">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="text">
-        <string>Coordenada Y3:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="spinY3">
-       <property name="maximum">
-        <double>600.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="lblCoordenadaZ3">
-       <property name="text">
-        <string>Coordenada Z3:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="spinZ3"/>
-     </item>
-     <item>
-      <widget class="QLabel" name="lblRaio">
-       <property name="text">
-        <string>Raio:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="spinRaio">
-       <property name="maximum">
-        <double>100.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="lblTamanho">
-       <property name="text">
-        <string>Tamanho</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="spinTamanho"/>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnCor">
-       <property name="text">
-        <string>Selecionar Cor</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnDesenhar">
-       <property name="text">
-        <string>Adicionar</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnModificarForma">
-       <property name="text">
-        <string>Modificar</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnExcluirForma">
-       <property name="text">
-        <string>Excluir</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

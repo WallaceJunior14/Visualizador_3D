@@ -2,17 +2,23 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <memory>
+#include <memory>  // Para std::shared_ptr
 #include <QColor>
-#include "frame_desenho.h"
 
-// Forward declarations
-namespace Ui { class MainWindow; }
+// Forward declarations para evitar inclusão de headers pesados.
+// Isso acelera a compilação.
+class FrameDesenho;
 class DisplayFile;
 class ObjetoGrafico;
-class Camera; // Alterado: de JanelaMundo para Camera
+class Ponto3D; // Assumindo que pode ser necessário em futuras assinaturas de método
 
-class MainWindow : public QMainWindow {
+// Forward declaration do namespace da UI gerada pelo Qt Designer
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
+
+class MainWindow : public QMainWindow
+{
     Q_OBJECT
 
 public:
@@ -20,62 +26,51 @@ public:
     ~MainWindow();
 
 private slots:
-    // Slots de criação/seleção de objetos (assinaturas inalteradas)
-    void on_comboFormas_currentIndexChanged(int index);
-    void on_btnCor_clicked();
-    void on_btnModificarForma_clicked();
-    void on_btnDesenhar_clicked();
-    void on_btnExcluirForma_clicked();
-    void on_btnLimparSelecao_clicked();
-    void on_btnCarregarOBJ_clicked();
-
-    // Slots de Transformação (ATUALIZADOS PARA 3D)
-    void on_spinTranslacaoX_valueChanged(double arg1);
-    void on_spinTranslacaoY_valueChanged(double arg1);
-    void on_spinTranslacaoZ_valueChanged(double arg1); // NOVO
-
-    void on_spinEscalaX_valueChanged(double value);
-    void on_spinEscalaY_valueChanged(double value);
-    void on_spinEscalaZ_valueChanged(double value); // NOVO
-
-    void on_hsRotacaoX_valueChanged(int value); // NOVO: Rotação em torno do eixo X
-    void on_hsRotacaoY_valueChanged(int value); // NOVO: Rotação em torno do eixo Y
-    void on_hsRotacaoZ_valueChanged(int value); // Antigo hsRotacaoX, agora com nome claro para eixo Z
-
-    // Slots de seleção de objeto e câmera
+    // Slots para seleção de alvos
     void on_cbDisplayFile_currentIndexChanged(int index);
     void on_cbDFCamera_currentIndexChanged(int index);
 
-    void on_btnCriarForma_clicked();
-
-private:
-    Ui::MainWindow *ui;
-    std::shared_ptr<DisplayFile> displayFile;
-    QColor corSelecionadaParaDesenho;
-
-    // Alvos de transformação (pode ser um objeto ou a câmera ativa)
-    std::shared_ptr<ObjetoGrafico> objetoSelecionado = nullptr;
-    // std::shared_ptr<JanelaMundo> janelaSelecionada foi removido
-    // A câmera ativa é obtida diretamente do DisplayFile
-
-    // Métodos auxiliares (assinaturas maiormente inalteradas, lógica muda no .cpp)
-    void inicializarUI();
-    void gerenciarVisibilidadeSpinners(const QString& tipoForma);
-    void atualizarCbDisplayFile();
-    void atualizarCbDFCamera(); // Lógica interna muda para usar Camera
-    void atualizarObjetoComDadosDaUI(std::shared_ptr<ObjetoGrafico>& objeto);
-    QString gerarNomeFormatadoParaObjeto(const QString& nomeBase,
-                                         std::shared_ptr<ObjetoGrafico> objeto,
-                                         const QColor& cor);
-    QString tipoObjetoParaStringUI(TipoObjeto tipo, int numPontos = 0);
-    void updateTransformationTargetUIState();
-
-    // Métodos de aplicação de transformação (lógica interna muda no .cpp)
+    // Slots para aplicar transformações (conectados manualmente)
     void aplicarTranslacaoAtual();
     void aplicarEscalaAtual();
     void aplicarRotacaoAtual();
 
-    void inicializarObjetosIniciais(DisplayFile* df);
+    // Slots para botões da interface
+    void on_btnCriarForma_clicked();
+    void on_btnCor_clicked();
+    void on_btnLimparSelecao_clicked();
+    void on_btnCarregarOBJ_clicked();
+
+    // Adicionado com base na lógica de updateTransformationTargetUIState
+    // Mesmo que a implementação não estivesse no .cpp, a UI provavelmente os tem.
+    void on_btnModificarForma_clicked();
+    void on_btnExcluirForma_clicked();
+
+private:
+    // --- MÉTODOS DE INICIALIZAÇÃO E GERENCIAMENTO ---
+    void inicializarComponentes();
+    void conectarSinais();
+    void inicializarUI();
+    void popularDisplayFileInicial(); // Método para criar a cena inicial
+
+    // --- MÉTODOS DE ATUALIZAÇÃO DA UI ---
+    void resetarControlesTransformacao();
+    void atualizarCbDisplayFile();
+    void atualizarCbDFCamera();
+    void updateTransformationTargetUIState();
+
+    // --- MÉTODOS AUXILIARES ---
+    QString gerarNomeFormatadoParaObjeto(const QString& nomeBase,
+                                         std::shared_ptr<ObjetoGrafico> objeto,
+                                         const QColor& cor);
+
+    // --- MEMBROS PRIVADOS ---
+    Ui::MainWindow *ui; // Ponteiro para a classe da interface gráfica gerada
+
+    std::shared_ptr<DisplayFile> displayFile;         // Estrutura de dados principal que contém todos os objetos e câmeras
+    std::shared_ptr<ObjetoGrafico> objetoSelecionado; // Ponteiro para o objeto atualmente selecionado para transformação
+
+    QColor corSelecionadaParaDesenho = Qt::white;     // Cor padrão para novos desenhos ou para o seletor de cor
 };
 
 #endif // MAINWINDOW_H

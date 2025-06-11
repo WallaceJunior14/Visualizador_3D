@@ -13,9 +13,10 @@ enum class TipoProjecao {
 class Camera {
 public:
     // Construtor cria uma câmera perspectiva padrão.
-    Camera(const QString& nome);
+    Camera(const Ponto3D& pos, const Ponto3D& target, const QString& nome = "Câmera");
 
     // Getters e Setters para a Matriz de Visualização (View)
+    void definirNome(const QString& novoNome);
     void definirPosicao(const Ponto3D& pos);
     void definirAlvo(const Ponto3D& alvo);
     void definirVetorUp(const Ponto3D& up);
@@ -34,6 +35,11 @@ public:
     Matriz obterMatrizProjecao() const;
 
     QString obterNome() const;
+
+    void transladar(double dx, double dy, double dz);
+    void dolly(double fator);
+    void orbitar(double deltaYaw, double deltaPitch);
+
 
 private:
     QString nome;

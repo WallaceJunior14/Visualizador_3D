@@ -23,7 +23,6 @@
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
-
 QT_BEGIN_NAMESPACE
 
 class Ui_MainWindow
@@ -64,7 +63,7 @@ public:
     QSlider *hsRotacaoZ;
     QLabel *lblRotacao;
     QWidget *tab;
-    QWidget *widget;
+    QWidget *layoutWidget;
     QVBoxLayout *verticalLayout_8;
     QLabel *lblVetorNormal;
     QGridLayout *gridLayout_2;
@@ -81,41 +80,11 @@ public:
     QComboBox *cbDisplayFile;
     QComboBox *cbDFCameras;
     QPushButton *btnLimparSelecao;
-    QWidget *layoutWidget;
+    QWidget *layoutWidget1;
     QVBoxLayout *verticalLayout_3;
     QRadioButton *rbTransformarObjeto;
     QRadioButton *rbTransformarCamera;
     QPushButton *btnCriarForma;
-    QWidget *layoutWidget_5;
-    QVBoxLayout *verticalLayout;
-    QLabel *lblForma;
-    QComboBox *comboFormas;
-    QLabel *lblCoordenadaX1;
-    QDoubleSpinBox *spinX1;
-    QLabel *lblCoordenadaY1;
-    QDoubleSpinBox *spinY1;
-    QLabel *lblCoordenadaZ1;
-    QDoubleSpinBox *spinZ1;
-    QLabel *lblCoordenadaX2;
-    QDoubleSpinBox *spinX2;
-    QLabel *lblCoordenadaY2;
-    QDoubleSpinBox *spinY2;
-    QLabel *lblCoordenadaZ2;
-    QDoubleSpinBox *spinZ2;
-    QLabel *lblCoordenadaX3;
-    QDoubleSpinBox *spinX3;
-    QLabel *lblCoordenadaY3;
-    QDoubleSpinBox *spinY3;
-    QLabel *lblCoordenadaZ3;
-    QDoubleSpinBox *spinZ3;
-    QLabel *lblRaio;
-    QDoubleSpinBox *spinRaio;
-    QLabel *lblTamanho;
-    QDoubleSpinBox *spinTamanho;
-    QPushButton *btnCor;
-    QPushButton *btnDesenhar;
-    QPushButton *btnModificarForma;
-    QPushButton *btnExcluirForma;
     QStatusBar *statusbar;
 
     void setupUi(QMainWindow *MainWindow)
@@ -123,23 +92,23 @@ public:
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName("MainWindow");
         MainWindow->setEnabled(true);
-        MainWindow->resize(1248, 884);
+        MainWindow->resize(1248, 739);
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName("centralwidget");
         frameDesenho = new FrameDesenho(centralwidget);
         frameDesenho->setObjectName("frameDesenho");
-        frameDesenho->setGeometry(QRect(180, 20, 800, 600));
+        frameDesenho->setGeometry(QRect(270, 20, 941, 641));
         frameDesenho->setMinimumSize(QSize(600, 400));
         frameDesenho->setFrameShape(QFrame::Shape::NoFrame);
         tabWidget = new QTabWidget(centralwidget);
         tabWidget->setObjectName("tabWidget");
         tabWidget->setEnabled(true);
-        tabWidget->setGeometry(QRect(1000, 20, 231, 251));
+        tabWidget->setGeometry(QRect(20, 20, 231, 251));
         tabTranslacao = new QWidget();
         tabTranslacao->setObjectName("tabTranslacao");
         layoutWidget_2 = new QWidget(tabTranslacao);
         layoutWidget_2->setObjectName("layoutWidget_2");
-        layoutWidget_2->setGeometry(QRect(10, 20, 201, 141));
+        layoutWidget_2->setGeometry(QRect(10, 20, 210, 141));
         verticalLayout_2 = new QVBoxLayout(layoutWidget_2);
         verticalLayout_2->setObjectName("verticalLayout_2");
         verticalLayout_2->setContentsMargins(0, 0, 0, 0);
@@ -184,6 +153,7 @@ public:
 
         spinTranslacaoZ = new QDoubleSpinBox(layoutWidget_2);
         spinTranslacaoZ->setObjectName("spinTranslacaoZ");
+        spinTranslacaoZ->setMinimum(-100000.000000000000000);
 
         gridLayout->addWidget(spinTranslacaoZ, 3, 0, 1, 1);
 
@@ -295,13 +265,13 @@ public:
         tabWidget->addTab(tabRotacao, QString());
         tab = new QWidget();
         tab->setObjectName("tab");
-        widget = new QWidget(tab);
-        widget->setObjectName("widget");
-        widget->setGeometry(QRect(10, 20, 201, 131));
-        verticalLayout_8 = new QVBoxLayout(widget);
+        layoutWidget = new QWidget(tab);
+        layoutWidget->setObjectName("layoutWidget");
+        layoutWidget->setGeometry(QRect(10, 20, 201, 145));
+        verticalLayout_8 = new QVBoxLayout(layoutWidget);
         verticalLayout_8->setObjectName("verticalLayout_8");
         verticalLayout_8->setContentsMargins(0, 0, 0, 0);
-        lblVetorNormal = new QLabel(widget);
+        lblVetorNormal = new QLabel(layoutWidget);
         lblVetorNormal->setObjectName("lblVetorNormal");
         lblVetorNormal->setFont(font);
 
@@ -311,12 +281,12 @@ public:
         gridLayout_2->setObjectName("gridLayout_2");
         verticalLayout_7 = new QVBoxLayout();
         verticalLayout_7->setObjectName("verticalLayout_7");
-        lblNz = new QLabel(widget);
+        lblNz = new QLabel(layoutWidget);
         lblNz->setObjectName("lblNz");
 
         verticalLayout_7->addWidget(lblNz);
 
-        spinNz = new QDoubleSpinBox(widget);
+        spinNz = new QDoubleSpinBox(layoutWidget);
         spinNz->setObjectName("spinNz");
 
         verticalLayout_7->addWidget(spinNz);
@@ -326,12 +296,12 @@ public:
 
         verticalLayout_5 = new QVBoxLayout();
         verticalLayout_5->setObjectName("verticalLayout_5");
-        lblNx = new QLabel(widget);
+        lblNx = new QLabel(layoutWidget);
         lblNx->setObjectName("lblNx");
 
         verticalLayout_5->addWidget(lblNx);
 
-        spinNx = new QDoubleSpinBox(widget);
+        spinNx = new QDoubleSpinBox(layoutWidget);
         spinNx->setObjectName("spinNx");
 
         verticalLayout_5->addWidget(spinNx);
@@ -341,12 +311,12 @@ public:
 
         verticalLayout_6 = new QVBoxLayout();
         verticalLayout_6->setObjectName("verticalLayout_6");
-        lblNy = new QLabel(widget);
+        lblNy = new QLabel(layoutWidget);
         lblNy->setObjectName("lblNy");
 
         verticalLayout_6->addWidget(lblNy);
 
-        spinNy = new QDoubleSpinBox(widget);
+        spinNy = new QDoubleSpinBox(layoutWidget);
         spinNy->setObjectName("spinNy");
 
         verticalLayout_6->addWidget(spinNy);
@@ -360,190 +330,35 @@ public:
         tabWidget->addTab(tab, QString());
         btnCarregarOBJ = new QPushButton(centralwidget);
         btnCarregarOBJ->setObjectName("btnCarregarOBJ");
-        btnCarregarOBJ->setGeometry(QRect(1000, 420, 231, 27));
+        btnCarregarOBJ->setGeometry(QRect(1050, 680, 161, 27));
         cbDisplayFile = new QComboBox(centralwidget);
         cbDisplayFile->setObjectName("cbDisplayFile");
-        cbDisplayFile->setGeometry(QRect(380, 640, 481, 28));
+        cbDisplayFile->setGeometry(QRect(470, 680, 451, 28));
         cbDFCameras = new QComboBox(centralwidget);
         cbDFCameras->setObjectName("cbDFCameras");
-        cbDFCameras->setGeometry(QRect(180, 640, 191, 27));
+        cbDFCameras->setGeometry(QRect(270, 680, 191, 27));
         btnLimparSelecao = new QPushButton(centralwidget);
         btnLimparSelecao->setObjectName("btnLimparSelecao");
-        btnLimparSelecao->setGeometry(QRect(870, 640, 111, 27));
-        layoutWidget = new QWidget(centralwidget);
-        layoutWidget->setObjectName("layoutWidget");
-        layoutWidget->setGeometry(QRect(1000, 290, 231, 58));
-        verticalLayout_3 = new QVBoxLayout(layoutWidget);
+        btnLimparSelecao->setGeometry(QRect(930, 680, 111, 27));
+        layoutWidget1 = new QWidget(centralwidget);
+        layoutWidget1->setObjectName("layoutWidget1");
+        layoutWidget1->setGeometry(QRect(20, 290, 231, 58));
+        verticalLayout_3 = new QVBoxLayout(layoutWidget1);
         verticalLayout_3->setObjectName("verticalLayout_3");
         verticalLayout_3->setContentsMargins(0, 0, 0, 0);
-        rbTransformarObjeto = new QRadioButton(layoutWidget);
+        rbTransformarObjeto = new QRadioButton(layoutWidget1);
         rbTransformarObjeto->setObjectName("rbTransformarObjeto");
 
         verticalLayout_3->addWidget(rbTransformarObjeto);
 
-        rbTransformarCamera = new QRadioButton(layoutWidget);
+        rbTransformarCamera = new QRadioButton(layoutWidget1);
         rbTransformarCamera->setObjectName("rbTransformarCamera");
 
         verticalLayout_3->addWidget(rbTransformarCamera);
 
         btnCriarForma = new QPushButton(centralwidget);
         btnCriarForma->setObjectName("btnCriarForma");
-        btnCriarForma->setGeometry(QRect(1000, 370, 231, 27));
-        layoutWidget_5 = new QWidget(centralwidget);
-        layoutWidget_5->setObjectName("layoutWidget_5");
-        layoutWidget_5->setGeometry(QRect(20, 20, 131, 835));
-        verticalLayout = new QVBoxLayout(layoutWidget_5);
-        verticalLayout->setObjectName("verticalLayout");
-        verticalLayout->setContentsMargins(0, 0, 0, 0);
-        lblForma = new QLabel(layoutWidget_5);
-        lblForma->setObjectName("lblForma");
-
-        verticalLayout->addWidget(lblForma);
-
-        comboFormas = new QComboBox(layoutWidget_5);
-        comboFormas->setObjectName("comboFormas");
-
-        verticalLayout->addWidget(comboFormas);
-
-        lblCoordenadaX1 = new QLabel(layoutWidget_5);
-        lblCoordenadaX1->setObjectName("lblCoordenadaX1");
-
-        verticalLayout->addWidget(lblCoordenadaX1);
-
-        spinX1 = new QDoubleSpinBox(layoutWidget_5);
-        spinX1->setObjectName("spinX1");
-        spinX1->setMaximum(600.000000000000000);
-
-        verticalLayout->addWidget(spinX1);
-
-        lblCoordenadaY1 = new QLabel(layoutWidget_5);
-        lblCoordenadaY1->setObjectName("lblCoordenadaY1");
-
-        verticalLayout->addWidget(lblCoordenadaY1);
-
-        spinY1 = new QDoubleSpinBox(layoutWidget_5);
-        spinY1->setObjectName("spinY1");
-        spinY1->setMaximum(600.000000000000000);
-
-        verticalLayout->addWidget(spinY1);
-
-        lblCoordenadaZ1 = new QLabel(layoutWidget_5);
-        lblCoordenadaZ1->setObjectName("lblCoordenadaZ1");
-
-        verticalLayout->addWidget(lblCoordenadaZ1);
-
-        spinZ1 = new QDoubleSpinBox(layoutWidget_5);
-        spinZ1->setObjectName("spinZ1");
-
-        verticalLayout->addWidget(spinZ1);
-
-        lblCoordenadaX2 = new QLabel(layoutWidget_5);
-        lblCoordenadaX2->setObjectName("lblCoordenadaX2");
-
-        verticalLayout->addWidget(lblCoordenadaX2);
-
-        spinX2 = new QDoubleSpinBox(layoutWidget_5);
-        spinX2->setObjectName("spinX2");
-        spinX2->setMaximum(600.000000000000000);
-
-        verticalLayout->addWidget(spinX2);
-
-        lblCoordenadaY2 = new QLabel(layoutWidget_5);
-        lblCoordenadaY2->setObjectName("lblCoordenadaY2");
-
-        verticalLayout->addWidget(lblCoordenadaY2);
-
-        spinY2 = new QDoubleSpinBox(layoutWidget_5);
-        spinY2->setObjectName("spinY2");
-        spinY2->setMaximum(600.000000000000000);
-
-        verticalLayout->addWidget(spinY2);
-
-        lblCoordenadaZ2 = new QLabel(layoutWidget_5);
-        lblCoordenadaZ2->setObjectName("lblCoordenadaZ2");
-
-        verticalLayout->addWidget(lblCoordenadaZ2);
-
-        spinZ2 = new QDoubleSpinBox(layoutWidget_5);
-        spinZ2->setObjectName("spinZ2");
-
-        verticalLayout->addWidget(spinZ2);
-
-        lblCoordenadaX3 = new QLabel(layoutWidget_5);
-        lblCoordenadaX3->setObjectName("lblCoordenadaX3");
-        lblCoordenadaX3->setEnabled(true);
-
-        verticalLayout->addWidget(lblCoordenadaX3);
-
-        spinX3 = new QDoubleSpinBox(layoutWidget_5);
-        spinX3->setObjectName("spinX3");
-        spinX3->setMaximum(600.000000000000000);
-
-        verticalLayout->addWidget(spinX3);
-
-        lblCoordenadaY3 = new QLabel(layoutWidget_5);
-        lblCoordenadaY3->setObjectName("lblCoordenadaY3");
-        lblCoordenadaY3->setEnabled(true);
-
-        verticalLayout->addWidget(lblCoordenadaY3);
-
-        spinY3 = new QDoubleSpinBox(layoutWidget_5);
-        spinY3->setObjectName("spinY3");
-        spinY3->setMaximum(600.000000000000000);
-
-        verticalLayout->addWidget(spinY3);
-
-        lblCoordenadaZ3 = new QLabel(layoutWidget_5);
-        lblCoordenadaZ3->setObjectName("lblCoordenadaZ3");
-
-        verticalLayout->addWidget(lblCoordenadaZ3);
-
-        spinZ3 = new QDoubleSpinBox(layoutWidget_5);
-        spinZ3->setObjectName("spinZ3");
-
-        verticalLayout->addWidget(spinZ3);
-
-        lblRaio = new QLabel(layoutWidget_5);
-        lblRaio->setObjectName("lblRaio");
-
-        verticalLayout->addWidget(lblRaio);
-
-        spinRaio = new QDoubleSpinBox(layoutWidget_5);
-        spinRaio->setObjectName("spinRaio");
-        spinRaio->setMaximum(100.000000000000000);
-
-        verticalLayout->addWidget(spinRaio);
-
-        lblTamanho = new QLabel(layoutWidget_5);
-        lblTamanho->setObjectName("lblTamanho");
-
-        verticalLayout->addWidget(lblTamanho);
-
-        spinTamanho = new QDoubleSpinBox(layoutWidget_5);
-        spinTamanho->setObjectName("spinTamanho");
-
-        verticalLayout->addWidget(spinTamanho);
-
-        btnCor = new QPushButton(layoutWidget_5);
-        btnCor->setObjectName("btnCor");
-
-        verticalLayout->addWidget(btnCor);
-
-        btnDesenhar = new QPushButton(layoutWidget_5);
-        btnDesenhar->setObjectName("btnDesenhar");
-
-        verticalLayout->addWidget(btnDesenhar);
-
-        btnModificarForma = new QPushButton(layoutWidget_5);
-        btnModificarForma->setObjectName("btnModificarForma");
-
-        verticalLayout->addWidget(btnModificarForma);
-
-        btnExcluirForma = new QPushButton(layoutWidget_5);
-        btnExcluirForma->setObjectName("btnExcluirForma");
-
-        verticalLayout->addWidget(btnExcluirForma);
-
+        btnCriarForma->setGeometry(QRect(20, 370, 231, 27));
         MainWindow->setCentralWidget(centralwidget);
         statusbar = new QStatusBar(MainWindow);
         statusbar->setObjectName("statusbar");
@@ -585,22 +400,6 @@ public:
         rbTransformarObjeto->setText(QCoreApplication::translate("MainWindow", "Transformar objeto", nullptr));
         rbTransformarCamera->setText(QCoreApplication::translate("MainWindow", "Transformar camera", nullptr));
         btnCriarForma->setText(QCoreApplication::translate("MainWindow", "Criar Forma", nullptr));
-        lblForma->setText(QCoreApplication::translate("MainWindow", "Forma:", nullptr));
-        lblCoordenadaX1->setText(QCoreApplication::translate("MainWindow", "Coordenada X1:", nullptr));
-        lblCoordenadaY1->setText(QCoreApplication::translate("MainWindow", "Coodernada Y1:", nullptr));
-        lblCoordenadaZ1->setText(QCoreApplication::translate("MainWindow", "Coordenada Z1:", nullptr));
-        lblCoordenadaX2->setText(QCoreApplication::translate("MainWindow", "Coordenada X2:", nullptr));
-        lblCoordenadaY2->setText(QCoreApplication::translate("MainWindow", "Coodernada Y2:", nullptr));
-        lblCoordenadaZ2->setText(QCoreApplication::translate("MainWindow", "Coordenada Z2:", nullptr));
-        lblCoordenadaX3->setText(QCoreApplication::translate("MainWindow", "Coordenada X3:", nullptr));
-        lblCoordenadaY3->setText(QCoreApplication::translate("MainWindow", "Coordenada Y3:", nullptr));
-        lblCoordenadaZ3->setText(QCoreApplication::translate("MainWindow", "Coordenada Z3:", nullptr));
-        lblRaio->setText(QCoreApplication::translate("MainWindow", "Raio:", nullptr));
-        lblTamanho->setText(QCoreApplication::translate("MainWindow", "Tamanho", nullptr));
-        btnCor->setText(QCoreApplication::translate("MainWindow", "Selecionar Cor", nullptr));
-        btnDesenhar->setText(QCoreApplication::translate("MainWindow", "Adicionar", nullptr));
-        btnModificarForma->setText(QCoreApplication::translate("MainWindow", "Modificar", nullptr));
-        btnExcluirForma->setText(QCoreApplication::translate("MainWindow", "Excluir", nullptr));
     } // retranslateUi
 
 };

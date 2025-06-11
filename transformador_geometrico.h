@@ -19,6 +19,9 @@ public:
     static Matriz rotacaoX(double anguloGraus, const Ponto3D& pivo = Ponto3D(0, 0, 0));
     static Matriz rotacaoY(double anguloGraus, const Ponto3D& pivo = Ponto3D(0, 0, 0));
     static Matriz rotacaoZ(double anguloGraus, const Ponto3D& pivo = Ponto3D(0, 0, 0));
+
+    static Matriz rotacaoEixoArbitrario(const Ponto3D& eixo, double angulo);
+    static Matriz rotacaoComposta(double anguloX, double anguloY, double anguloZ, const Ponto3D& pivo);
 };
 
 #endif // TRANSFORMADOR_GEOMETRICO_H
