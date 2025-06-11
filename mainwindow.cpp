@@ -9,12 +9,15 @@
 #include "ponto3d.h"
 #include "transformador_geometrico.h"
 #include "gerenciadorobjetosdialog.h"
+#include "carregador_obj.h"
+#include "malha_obj.h"
 
 // Módulos Qt
 #include <QColorDialog>
 #include <QMessageBox>
 #include <QDebug>
 #include <QRadioButton>
+#include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -362,9 +365,39 @@ void MainWindow::on_btnCriarForma_clicked() {
 
 void MainWindow::on_btnCarregarOBJ_clicked()
 {
-    // Por enquanto, podemos apenas mostrar uma mensagem informando que a
-    // funcionalidade ainda não foi implementada. Isso resolve o erro.
-    QMessageBox::information(this, "Carregar Arquivo .OBJ", "Funcionalidade ainda não implementada.");
+    // Abre uma janela de diálogo para o usuário selecionar um arquivo
+    QString caminhoArquivo = QFileDialog::getOpenFileName(
+        this,
+        "Carregar Arquivo .OBJ",
+        "", // Diretório inicial (vazio significa o último usado)
+        "Arquivos de Objeto Wavefront (*.obj)"
+        );
+
+    // Se o usuário não selecionou nenhum arquivo, retorna
+    if (caminhoArquivo.isEmpty()) {
+        return;
+    }
+
+    // Chama nossa classe carregadora para processar o arquivo
+    auto novoObjeto = CarregadorOBJ::carregar(caminhoArquivo);
+
+    if (novoObjeto) {
+        displayFile->adicionarObjeto(novoObjeto);
+        atualizarCbDisplayFile();
+
+        // ✅ CHAME A FUNÇÃO DE FOCO AQUI!
+        focarNoObjeto(novoObjeto);
+
+        ui->frameDesenho->redesenhar(); // Redesenha com a câmera e objeto na posição certa
+
+        int idx = ui->cbDisplayFile->findData(QVariant::fromValue(novoObjeto->obterNome()));
+        if (idx != -1) {
+            ui->cbDisplayFile->setCurrentIndex(idx);
+        }
+        QMessageBox::information(this, "Sucesso", "Objeto '" + novoObjeto->obterNome() + "' carregado.");
+    } else {
+        QMessageBox::warning(this, "Erro de Carregamento", "Não foi possível carregar o arquivo .obj selecionado.");
+    }
 }
 
 void MainWindow::on_btnModificarForma_clicked()
@@ -409,4 +442,36 @@ void MainWindow::on_btnExcluirForma_clicked()
         atualizarCbDisplayFile();
         ui->frameDesenho->redesenhar();
     }
+}
+
+
+// Em mainwindow.cpp
+void MainWindow::focarNoObjeto(std::shared_ptr<ObjetoGrafico> objeto) {
+    if (!objeto || !displayFile || !displayFile->obterCameraAtiva()) {
+        return;
+    }
+
+    auto camera = displayFile->obterCameraAtiva();
+
+    BoundingBox bbox = objeto->obterBBox();
+    if (!bbox.ehValida()) return;
+
+    Ponto3D centroObjeto = bbox.obterCentro();
+
+    Ponto3D pMin = bbox.obterMin();
+    Ponto3D pMax = bbox.obterMax();
+
+    Ponto3D vetorDiagonal = pMax - pMin;
+    double tamanho = vetorDiagonal.magnitude();
+
+    if (tamanho < 1.0) tamanho = 1.0;
+
+    // Define o novo alvo da câmera
+    camera->definirAlvo(centroObjeto);
+
+    // Calcula a nova posição da câmera
+    Ponto3D direcaoVisao = (camera->obterAlvo() - camera->obterPosicao()).normalizarVetor();
+    Ponto3D novaPosicaoCamera = centroObjeto - (direcaoVisao * tamanho * 1.5);
+
+    camera->definirPosicao(novaPosicaoCamera);
 }

@@ -11,6 +11,7 @@ CONFIG += c++17
 SOURCES += \
     bounding_box.cpp \
     camera.cpp \
+    carregador_obj.cpp \
     circunferencia_obj.cpp \
     clipper.cpp \
     display_file.cpp \
@@ -18,6 +19,7 @@ SOURCES += \
     gerenciadorobjetosdialog.cpp \
     main.cpp \
     mainwindow.cpp \
+    malha_obj.cpp \
     matriz.cpp \
     objeto_grafico.cpp \
     poligono_obj.cpp \
@@ -31,12 +33,14 @@ SOURCES += \
 HEADERS += \
     bounding_box.h \
     camera.h \
+    carregador_obj.h \
     circunferencia_obj.h \
     clipper.h \
     display_file.h \
     frame_desenho.h \
     gerenciadorobjetosdialog.h \
     mainwindow.h \
+    malha_obj.h \
     matriz.h \
     objeto_grafico.h \
     poligono_obj.h \

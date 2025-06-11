@@ -64,6 +64,8 @@ private:
                                          std::shared_ptr<ObjetoGrafico> objeto,
                                          const QColor& cor);
 
+    void focarNoObjeto(std::shared_ptr<ObjetoGrafico> objeto);
+
     // --- MEMBROS PRIVADOS ---
     Ui::MainWindow *ui; // Ponteiro para a classe da interface gráfica gerada
 

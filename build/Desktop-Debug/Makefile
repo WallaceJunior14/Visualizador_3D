@@ -54,6 +54,7 @@ OBJECTS_DIR   = ./
 
 SOURCES       = ../../bounding_box.cpp \
 		../../camera.cpp \
+		../../carregador_obj.cpp \
 		../../circunferencia_obj.cpp \
 		../../clipper.cpp \
 		../../display_file.cpp \
@@ -61,6 +62,7 @@ SOURCES       = ../../bounding_box.cpp \
 		../../gerenciadorobjetosdialog.cpp \
 		../../main.cpp \
 		../../mainwindow.cpp \
+		../../malha_obj.cpp \
 		../../matriz.cpp \
 		../../objeto_grafico.cpp \
 		../../poligono_obj.cpp \
@@ -74,6 +76,7 @@ SOURCES       = ../../bounding_box.cpp \
 		moc_mainwindow.cpp
 OBJECTS       = bounding_box.o \
 		camera.o \
+		carregador_obj.o \
 		circunferencia_obj.o \
 		clipper.o \
 		display_file.o \
@@ -81,6 +84,7 @@ OBJECTS       = bounding_box.o \
 		gerenciadorobjetosdialog.o \
 		main.o \
 		mainwindow.o \
+		malha_obj.o \
 		matriz.o \
 		objeto_grafico.o \
 		poligono_obj.o \
@@ -165,12 +169,14 @@ DIST          = /usr/lib64/qt6/mkspecs/features/spec_pre.prf \
 		/usr/lib64/qt6/mkspecs/features/lex.prf \
 		../../../../visualizador_3d.pro ../../bounding_box.h \
 		../../camera.h \
+		../../carregador_obj.h \
 		../../circunferencia_obj.h \
 		../../clipper.h \
 		../../display_file.h \
 		../../frame_desenho.h \
 		../../gerenciadorobjetosdialog.h \
 		../../mainwindow.h \
+		../../malha_obj.h \
 		../../matriz.h \
 		../../objeto_grafico.h \
 		../../poligono_obj.h \
@@ -182,6 +188,7 @@ DIST          = /usr/lib64/qt6/mkspecs/features/spec_pre.prf \
 		../../transformador_geometrico.h \
 		../../viewport_tela.h ../../bounding_box.cpp \
 		../../camera.cpp \
+		../../carregador_obj.cpp \
 		../../circunferencia_obj.cpp \
 		../../clipper.cpp \
 		../../display_file.cpp \
@@ -189,6 +196,7 @@ DIST          = /usr/lib64/qt6/mkspecs/features/spec_pre.prf \
 		../../gerenciadorobjetosdialog.cpp \
 		../../main.cpp \
 		../../mainwindow.cpp \
+		../../malha_obj.cpp \
 		../../matriz.cpp \
 		../../objeto_grafico.cpp \
 		../../poligono_obj.cpp \
@@ -373,8 +381,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib64/qt6/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../../bounding_box.h ../../camera.h ../../circunferencia_obj.h ../../clipper.h ../../display_file.h ../../frame_desenho.h ../../gerenciadorobjetosdialog.h ../../mainwindow.h ../../matriz.h ../../objeto_grafico.h ../../poligono_obj.h ../../ponto2d.h ../../ponto3d.h ../../ponto_obj.h ../../reta_obj.h ../../tipos.h ../../transformador_geometrico.h ../../viewport_tela.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../../bounding_box.cpp ../../camera.cpp ../../circunferencia_obj.cpp ../../clipper.cpp ../../display_file.cpp ../../frame_desenho.cpp ../../gerenciadorobjetosdialog.cpp ../../main.cpp ../../mainwindow.cpp ../../matriz.cpp ../../objeto_grafico.cpp ../../poligono_obj.cpp ../../ponto2d.cpp ../../ponto3d.cpp ../../ponto_obj.cpp ../../reta_obj.cpp ../../transformador_geometrico.cpp ../../viewport_tela.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../../bounding_box.h ../../camera.h ../../carregador_obj.h ../../circunferencia_obj.h ../../clipper.h ../../display_file.h ../../frame_desenho.h ../../gerenciadorobjetosdialog.h ../../mainwindow.h ../../malha_obj.h ../../matriz.h ../../objeto_grafico.h ../../poligono_obj.h ../../ponto2d.h ../../ponto3d.h ../../ponto_obj.h ../../reta_obj.h ../../tipos.h ../../transformador_geometrico.h ../../viewport_tela.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../../bounding_box.cpp ../../camera.cpp ../../carregador_obj.cpp ../../circunferencia_obj.cpp ../../clipper.cpp ../../display_file.cpp ../../frame_desenho.cpp ../../gerenciadorobjetosdialog.cpp ../../main.cpp ../../mainwindow.cpp ../../malha_obj.cpp ../../matriz.cpp ../../objeto_grafico.cpp ../../poligono_obj.cpp ../../ponto2d.cpp ../../ponto3d.cpp ../../ponto_obj.cpp ../../reta_obj.cpp ../../transformador_geometrico.cpp ../../viewport_tela.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../../gerenciadorobjetosdialog.ui ../../mainwindow.ui $(DISTDIR)/
 
 
@@ -429,15 +437,6 @@ moc_gerenciadorobjetosdialog.cpp: ../../gerenciadorobjetosdialog.h \
 	/usr/lib64/qt6/libexec/moc $(DEFINES) --include /home/wallace_junior/Documentos/UTFPR/Computacao_Grafica/visualizador_3d/build/Desktop-Debug/moc_predefs.h -I/usr/lib64/qt6/mkspecs/linux-g++ -I/home/wallace_junior/Documentos/UTFPR/Computacao_Grafica/visualizador_3d -I/usr/include/qt6 -I/usr/include/qt6/QtWidgets -I/usr/include/qt6/QtGui -I/usr/include/qt6/QtCore -I. -I/usr/include/c++/15 -I/usr/include/c++/15/x86_64-redhat-linux -I/usr/include/c++/15/backward -I/usr/lib/gcc/x86_64-redhat-linux/15/include -I/usr/local/include -I/usr/include ../../gerenciadorobjetosdialog.h -o moc_gerenciadorobjetosdialog.cpp
 
 moc_mainwindow.cpp: ../../mainwindow.h \
-		../../frame_desenho.h \
-		../../display_file.h \
-		../../objeto_grafico.h \
-		../../ponto3d.h \
-		../../matriz.h \
-		../../tipos.h \
-		../../camera.h \
-		../../viewport_tela.h \
-		../../clipper.h \
 		moc_predefs.h \
 		/usr/lib64/qt6/libexec/moc
 	/usr/lib64/qt6/libexec/moc $(DEFINES) --include /home/wallace_junior/Documentos/UTFPR/Computacao_Grafica/visualizador_3d/build/Desktop-Debug/moc_predefs.h -I/usr/lib64/qt6/mkspecs/linux-g++ -I/home/wallace_junior/Documentos/UTFPR/Computacao_Grafica/visualizador_3d -I/usr/include/qt6 -I/usr/include/qt6/QtWidgets -I/usr/include/qt6/QtGui -I/usr/include/qt6/QtCore -I. -I/usr/include/c++/15 -I/usr/include/c++/15/x86_64-redhat-linux -I/usr/include/c++/15/backward -I/usr/lib/gcc/x86_64-redhat-linux/15/include -I/usr/local/include -I/usr/include ../../mainwindow.h -o moc_mainwindow.cpp
@@ -474,8 +473,17 @@ bounding_box.o: ../../bounding_box.cpp ../../bounding_box.h \
 
 camera.o: ../../camera.cpp ../../camera.h \
 		../../ponto3d.h \
-		../../matriz.h
+		../../matriz.h \
+		../../transformador_geometrico.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o camera.o ../../camera.cpp
+
+carregador_obj.o: ../../carregador_obj.cpp ../../carregador_obj.h \
+		../../malha_obj.h \
+		../../objeto_grafico.h \
+		../../ponto3d.h \
+		../../matriz.h \
+		../../tipos.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o carregador_obj.o ../../carregador_obj.cpp
 
 circunferencia_obj.o: ../../circunferencia_obj.cpp ../../circunferencia_obj.h \
 		../../objeto_grafico.h \
@@ -516,19 +524,20 @@ frame_desenho.o: ../../frame_desenho.cpp ../../frame_desenho.h \
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o frame_desenho.o ../../frame_desenho.cpp
 
 gerenciadorobjetosdialog.o: ../../gerenciadorobjetosdialog.cpp ../../gerenciadorobjetosdialog.h \
-		ui_gerenciadorobjetosdialog.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gerenciadorobjetosdialog.o ../../gerenciadorobjetosdialog.cpp
-
-main.o: ../../main.cpp ../../mainwindow.h \
-		../../frame_desenho.h \
+		ui_gerenciadorobjetosdialog.h \
 		../../display_file.h \
 		../../objeto_grafico.h \
 		../../ponto3d.h \
 		../../matriz.h \
 		../../tipos.h \
 		../../camera.h \
-		../../viewport_tela.h \
-		../../clipper.h
+		../../ponto_obj.h \
+		../../reta_obj.h \
+		../../poligono_obj.h \
+		../../circunferencia_obj.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gerenciadorobjetosdialog.o ../../gerenciadorobjetosdialog.cpp
+
+main.o: ../../main.cpp ../../mainwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../../main.cpp
 
 mainwindow.o: ../../mainwindow.cpp ../../mainwindow.h \
@@ -542,13 +551,20 @@ mainwindow.o: ../../mainwindow.cpp ../../mainwindow.h \
 		../../viewport_tela.h \
 		../../clipper.h \
 		ui_mainwindow.h \
-		../../ponto_obj.h \
-		../../reta_obj.h \
-		../../poligono_obj.h \
-		../../circunferencia_obj.h \
 		../../transformador_geometrico.h \
-		../../gerenciadorobjetosdialog.h
+		../../gerenciadorobjetosdialog.h \
+		../../carregador_obj.h \
+		../../malha_obj.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o ../../mainwindow.cpp
+
+malha_obj.o: ../../malha_obj.cpp ../../malha_obj.h \
+		../../objeto_grafico.h \
+		../../ponto3d.h \
+		../../matriz.h \
+		../../tipos.h \
+		../../ponto2d.h \
+		../../clipper.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o malha_obj.o ../../malha_obj.cpp
 
 matriz.o: ../../matriz.cpp ../../matriz.h \
 		../../ponto3d.h

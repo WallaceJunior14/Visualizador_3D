@@ -4,6 +4,8 @@
 #include "reta_obj.h"
 #include "poligono_obj.h"
 #include "circunferencia_obj.h" // A lógica de desenho será unificada com a do polígono
+#include "malha_obj.h"
+
 #include <QMouseEvent>
 #include <QDebug>
 
@@ -151,6 +153,26 @@ void FrameDesenho::desenharObjeto(QPainter& painter, std::shared_ptr<ObjetoGrafi
                 Ponto2D p2Tela(matViewport * p2_2D);
                 painter.drawLine(qRound(p1Tela.obterX()), qRound(p1Tela.obterY()),
                                  qRound(p2Tela.obterX()), qRound(p2Tela.obterY()));
+            }
+        }
+    } else if (tipo == TipoObjeto::MALHA) {
+        auto malha = std::dynamic_pointer_cast<MalhaObj>(objeto);
+        if (!malha) return;
+
+        const auto& arestas = malha->obterArestas();
+        for (const auto& aresta : arestas) {
+            if (aresta.first < pontosNDC_3D.size() && aresta.second < pontosNDC_3D.size()) {
+                Ponto3D p1 = pontosNDC_3D.at(aresta.first);
+                Ponto3D p2 = pontosNDC_3D.at(aresta.second);
+
+                if (clipper->cliparReta(p1, p2)) {
+                    Ponto2D p1_2D(p1.obterX(), p1.obterY());
+                    Ponto2D p2_2D(p2.obterX(), p2.obterY());
+                    Ponto2D p1Tela(matViewport * p1_2D);
+                    Ponto2D p2Tela(matViewport * p2_2D);
+                    painter.drawLine(qRound(p1Tela.obterX()), qRound(p1Tela.obterY()),
+                                     qRound(p2Tela.obterX()), qRound(p2Tela.obterY()));
+                }
             }
         }
     }
