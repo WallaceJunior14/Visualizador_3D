@@ -18,6 +18,7 @@
 #include <QDebug>
 #include <QRadioButton>
 #include <QFileDialog>
+#include <QInputDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -365,36 +366,64 @@ void MainWindow::on_btnCriarForma_clicked() {
 
 void MainWindow::on_btnCarregarOBJ_clicked()
 {
-    // Abre uma janela de diálogo para o usuário selecionar um arquivo
     QString caminhoArquivo = QFileDialog::getOpenFileName(
         this,
         "Carregar Arquivo .OBJ",
-        "", // Diretório inicial (vazio significa o último usado)
+        "",
         "Arquivos de Objeto Wavefront (*.obj)"
         );
 
-    // Se o usuário não selecionou nenhum arquivo, retorna
     if (caminhoArquivo.isEmpty()) {
-        return;
+        return; // Usuário cancelou a seleção de arquivo
     }
 
-    // Chama nossa classe carregadora para processar o arquivo
+    // --- PASSO 1: OBTER O PONTO DE DESTINO DO USUÁRIO ---
+    bool okX, okY, okZ;
+    double x = QInputDialog::getDouble(this, "Posição do Objeto", "Digite a coordenada X:", 0, -10000, 10000, 2, &okX);
+    if (!okX) return; // Usuário cancelou
+
+    double y = QInputDialog::getDouble(this, "Posição do Objeto", "Digite a coordenada Y:", 0, -10000, 10000, 2, &okY);
+    if (!okY) return; // Usuário cancelou
+
+    double z = QInputDialog::getDouble(this, "Posição do Objeto", "Digite a coordenada Z:", 0, -10000, 10000, 2, &okZ);
+    if (!okZ) return; // Usuário cancelou
+
+    Ponto3D pontoDestino(x, y, z);
+    // --- FIM DO PASSO 1 ---
+
     auto novoObjeto = CarregadorOBJ::carregar(caminhoArquivo);
 
     if (novoObjeto) {
+        // --- PASSO 2: CALCULAR E APLICAR A TRANSLAÇÃO ---
+        BoundingBox bboxInicial = novoObjeto->obterBBox();
+        if (bboxInicial.ehValida()) {
+            Ponto3D centroOriginal = bboxInicial.obterCentro();
+
+            // O vetor de translação é a diferença entre onde queremos ir e onde estamos
+            Ponto3D vetorTranslacao = pontoDestino - centroOriginal;
+
+            // Cria a matriz de translação
+            Matriz matTranslacao = Matriz::translacao(
+                vetorTranslacao.obterX(),
+                vetorTranslacao.obterY(),
+                vetorTranslacao.obterZ()
+                );
+
+            // Aplica a transformação inicial para posicionar o objeto
+            novoObjeto->aplicarTransformacao(matTranslacao);
+        }
+        // --- FIM DO PASSO 2 ---
+
         displayFile->adicionarObjeto(novoObjeto);
         atualizarCbDisplayFile();
-
-        // ✅ CHAME A FUNÇÃO DE FOCO AQUI!
-        focarNoObjeto(novoObjeto);
-
-        ui->frameDesenho->redesenhar(); // Redesenha com a câmera e objeto na posição certa
+        focarNoObjeto(novoObjeto); // A função de foco agora enquadrará o objeto em sua nova posição
+        ui->frameDesenho->redesenhar();
 
         int idx = ui->cbDisplayFile->findData(QVariant::fromValue(novoObjeto->obterNome()));
         if (idx != -1) {
             ui->cbDisplayFile->setCurrentIndex(idx);
         }
-        QMessageBox::information(this, "Sucesso", "Objeto '" + novoObjeto->obterNome() + "' carregado.");
+        QMessageBox::information(this, "Sucesso", "Objeto '" + novoObjeto->obterNome() + "' carregado na posição (" + QString::number(x) + ", " + QString::number(y) + ", " + QString::number(z) + ").");
     } else {
         QMessageBox::warning(this, "Erro de Carregamento", "Não foi possível carregar o arquivo .obj selecionado.");
     }
