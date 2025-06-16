@@ -70,9 +70,9 @@ protected:
     // (Nenhuma alteração nesta seção)
     QString nome;
     TipoObjeto tipo;
-    QColor cor;
     QList<Ponto3D> pontosOriginaisMundo;
     Matriz matrizTransformacao;
+    QColor cor;
     QList<Ponto3D> pontosClip;
 };
 

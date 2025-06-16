@@ -65,6 +65,8 @@ void FrameDesenho::redesenhar() {
     update();
 }
 
+
+
 void FrameDesenho::paintEvent(QPaintEvent *event) {
     QFrame::paintEvent(event);
     QPainter painter(this);

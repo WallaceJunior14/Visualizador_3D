@@ -2,6 +2,7 @@
 #include "bounding_box.h"
 #include <cmath>
 #include <QRect> // <-- ADICIONADO
+#include <iostream>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -40,6 +41,48 @@ void CircunferenciaObj::definirNormal(const Ponto3D& novaNormal) {
     gerarPontosAproximacao();
 }
 
+/*Ponto3D casteljau(QList<Ponto3D> pontosControle, double i){
+    QList<Ponto3D> pontosAtuais = pontosControle;
+    int n = pontosAtuais.size() - 1;
+
+    for (int j = 1; j <= n; ++j) {
+        for (int k = 0; k <= (n - j); ++k) {
+            //pontosAtuais[k] = pontosAtuais[k] * (1.0 - i) + pontosAtuais[k+1] * i;
+            pontosAtuais[k] = (pontosAtuais[k] + pontosAtuais[k+1]) / 2;
+        }
+    }
+    return pontosAtuais[0];
+}*/
+
+QList<Ponto3D> CircunferenciaObj::casteljau(QList<Ponto3D> controlPoints, QList<Ponto3D> allMidpoints) {
+    Ponto3D vetorCentroPonto;
+
+    // Adiciona os pontos do nível atual (exceto o último nível que será o ponto final)
+    if (controlPoints.size() > 1) {
+        for (const Ponto3D& pt : controlPoints) {
+            allMidpoints.push_back(pt);
+        }
+    }
+
+    // Caso base: Se houver apenas um ponto de controle, ele é o ponto final da recursão.
+    if (controlPoints.size() == 1) {
+        allMidpoints.push_back(controlPoints.first()); // Adiciona o ponto final também
+        return allMidpoints; // Retorna o ponto final da recursão
+    }
+
+    // Passo recursivo: Crie um novo conjunto de pontos interpolados usando o ponto médio
+    QList<Ponto3D> newPoints;
+    for (int i = 0; i < (controlPoints.size()-1); i++) {
+        Ponto3D p1 = controlPoints[i];
+            Ponto3D p2 = controlPoints[i+1];
+            Ponto3D interpolatedPoint = (p1 + p2) / 2.0; // Interpolação fixa em t=0.5
+            newPoints.push_back(interpolatedPoint);
+            i = controlPoints.size()-1;
+    }
+
+    // Chame a função recursivamente com o novo conjunto de pontos
+    return casteljau(newPoints, allMidpoints);
+}
 
 // --- IMPLEMENTAÇÃO DOS MÉTODOS VIRTUAIS ---
 
@@ -106,6 +149,7 @@ Ponto3D CircunferenciaObj::calcularCentroGeometrico() const {
  */
 void CircunferenciaObj::gerarPontosAproximacao() {
     Ponto3D n = normal_m;
+
     Ponto3D u;
     if (std::abs(n.obterY()) < 0.99) {
         u = Ponto3D::produtoVetorial(Ponto3D(0, 1, 0), n).normalizarVetor();
@@ -123,5 +167,15 @@ void CircunferenciaObj::gerarPontosAproximacao() {
         Ponto3D ponto = centroOriginal_m + (u * (raioOriginal_m * cosA)) + (v * (raioOriginal_m * sinA));
         pontosAprox.append(ponto);
     }
-    definirPontosOriginaisMundo(pontosAprox);
+
+    QList<Ponto3D> vetor;
+    QList<Ponto3D> novosPontos = casteljau(pontosAprox, vetor);
+
+    //definirPontosOriginaisMundo(pontosAprox);
+    definirPontosOriginaisMundo(novosPontos);
+
+    int i = 0;
+    for (i;i<pontosAprox.size()-1;i++){
+        printf("\nComparando %f com %f", pontosAprox[i].obterX(), pontosAprox[pontosAprox.size()-1-i].obterX());
+    }
 }
