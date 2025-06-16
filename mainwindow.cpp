@@ -63,13 +63,13 @@ void MainWindow::conectarSinais() {
     connect(ui->cbDFCameras, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_cbDFCamera_currentIndexChanged);
 
     // --- CONEXÕES DE TRANSFORMAÇÃO 3D ---
-    connect(ui->spinTranslacaoX, &QDoubleSpinBox::valueChanged, this, &MainWindow::aplicarTranslacaoAtual);
-    connect(ui->spinTranslacaoY, &QDoubleSpinBox::valueChanged, this, &MainWindow::aplicarTranslacaoAtual);
-    connect(ui->spinTranslacaoZ, &QDoubleSpinBox::valueChanged, this, &MainWindow::aplicarTranslacaoAtual);
+    connect(ui->spinTranslacaoX, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::aplicarTranslacaoAtual);
+    connect(ui->spinTranslacaoY, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::aplicarTranslacaoAtual);
+    connect(ui->spinTranslacaoZ, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::aplicarTranslacaoAtual);
 
-    connect(ui->spinEscalaX, &QDoubleSpinBox::valueChanged, this, &MainWindow::aplicarEscalaAtual);
-    connect(ui->spinEscalaY, &QDoubleSpinBox::valueChanged, this, &MainWindow::aplicarEscalaAtual);
-    connect(ui->spinEscalaZ, &QDoubleSpinBox::valueChanged, this, &MainWindow::aplicarEscalaAtual);
+    connect(ui->spinEscalaX, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::aplicarEscalaAtual);
+    connect(ui->spinEscalaY, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::aplicarEscalaAtual);
+    connect(ui->spinEscalaZ, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::aplicarEscalaAtual);
 
     connect(ui->hsRotacaoX, &QSlider::valueChanged, this, &MainWindow::aplicarRotacaoAtual);
     connect(ui->hsRotacaoY, &QSlider::valueChanged, this, &MainWindow::aplicarRotacaoAtual);
@@ -81,6 +81,7 @@ void MainWindow::inicializarUI() {
     if(ui->frameDesenho) {
         ui->frameDesenho->setFocusPolicy(Qt::StrongFocus);
     }
+    ui->rbTransformarCamera->setChecked(true);
 }
 
 void MainWindow::resetarControlesTransformacao() {
@@ -195,7 +196,10 @@ void MainWindow::on_cbDFCamera_currentIndexChanged(int index) {
     auto cameraSelecionada = displayFile->buscarCamera(nomeCamera);
 
     if (cameraSelecionada) {
+        ui->rbTransformarCamera->setChecked(true);
+
         displayFile->definirCameraAtiva(cameraSelecionada);
+
         if (objetoSelecionado) {
             ui->cbDisplayFile->setCurrentIndex(-1);
         }
@@ -209,24 +213,35 @@ void MainWindow::on_cbDFCamera_currentIndexChanged(int index) {
     updateTransformationTargetUIState();
 }
 
-
-void MainWindow::on_cbDisplayFile_currentIndexChanged(int index) {
+void MainWindow::on_cbDisplayFile_currentIndexChanged(int index)
+{
+    // Se nenhum item estiver selecionado (índice -1), limpa o ponteiro e sai.
     if (!displayFile || index < 0) {
         objetoSelecionado = nullptr;
         updateTransformationTargetUIState();
         return;
     }
 
+    // Busca o objeto pelo nome armazenado no ComboBox.
     QString nomeObjeto = ui->cbDisplayFile->itemData(index).toString();
     objetoSelecionado = displayFile->buscarObjeto(nomeObjeto);
 
+    // ESTE 'IF' É CRUCIAL:
+    // Somente se o objeto foi encontrado com sucesso (ponteiro não é nulo)...
     if (objetoSelecionado) {
+        // ...então, define a intenção da UI para transformar o objeto.
+        ui->rbTransformarObjeto->setChecked(true);
+
+        // E desmarca a seleção da câmera para evitar confusão.
         if (ui->cbDFCameras->currentIndex() != -1) {
             ui->cbDFCameras->setCurrentIndex(-1);
         }
     } else {
-        qWarning() << "Objeto não encontrado:" << nomeObjeto;
+        // Caso o objeto não seja encontrado por algum motivo, avisa sobre o erro.
+        qWarning() << "LÓGICA DE SELEÇÃO FALHOU: Objeto '" << nomeObjeto << "' não encontrado no DisplayFile!";
     }
+
+    // Atualiza o estado geral da UI.
     updateTransformationTargetUIState();
 }
 
@@ -234,19 +249,23 @@ void MainWindow::on_cbDisplayFile_currentIndexChanged(int index) {
 // --- LÓGICA DE TRANSFORMAÇÃO ---
 
 void MainWindow::aplicarTranslacaoAtual() {
-    if (!ui->tabWidget->isEnabled()) return;
+    if (!ui->tabWidget->isEnabled()) {
+        return;
+    }
 
     double dx = ui->spinTranslacaoX->value();
     double dy = ui->spinTranslacaoY->value();
     double dz = ui->spinTranslacaoZ->value();
     if (dx == 0 && dy == 0 && dz == 0) return;
 
+
     auto camera = displayFile->obterCameraAtiva();
-    // ✅ CORREÇÃO: Lógica mais explícita
     if (ui->rbTransformarObjeto->isChecked() && objetoSelecionado) {
+        //qDebug() << "Aplicando transformação no OBJETO.";
         Matriz T = TransformadorGeometrico::translacao(dx, dy, dz);
         objetoSelecionado->aplicarTransformacao(T);
     } else if (ui->rbTransformarCamera->isChecked() && camera) {
+        //qDebug() << "Aplicando transformação na CAMERA.";
         camera->transladar(dx, dy, dz);
     }
 
@@ -296,7 +315,6 @@ void MainWindow::aplicarRotacaoAtual() {
 
     auto camera = displayFile->obterCameraAtiva();
     if (ui->rbTransformarObjeto->isChecked() && objetoSelecionado) {
-        // ✅ CORREÇÃO AQUI
         // 1. Pega o centro do modelo original.
         Ponto3D centroOriginal = objetoSelecionado->calcularCentroGeometrico();
         // 2. Transforma o centro para encontrar a posição atual do pivô no mundo.
@@ -364,6 +382,17 @@ void MainWindow::on_btnCriarForma_clicked() {
     }
 }
 
+void MainWindow::on_btnModificarForma_clicked()
+{
+    // A lógica para modificar uma forma pode ser complexa.
+    // Por enquanto, uma mensagem resolve o erro de link-edição.
+    if (objetoSelecionado) {
+        QMessageBox::information(this, "Modificar Forma", "Funcionalidade de modificar ainda não implementada.");
+    } else {
+        QMessageBox::warning(this, "Modificar Forma", "Nenhum objeto selecionado para modificar.");
+    }
+}
+
 void MainWindow::on_btnCarregarOBJ_clicked()
 {
     QString caminhoArquivo = QFileDialog::getOpenFileName(
@@ -398,45 +427,44 @@ void MainWindow::on_btnCarregarOBJ_clicked()
         BoundingBox bboxInicial = novoObjeto->obterBBox();
         if (bboxInicial.ehValida()) {
             Ponto3D centroOriginal = bboxInicial.obterCentro();
-
-            // O vetor de translação é a diferença entre onde queremos ir e onde estamos
             Ponto3D vetorTranslacao = pontoDestino - centroOriginal;
-
-            // Cria a matriz de translação
             Matriz matTranslacao = Matriz::translacao(
                 vetorTranslacao.obterX(),
                 vetorTranslacao.obterY(),
                 vetorTranslacao.obterZ()
                 );
-
-            // Aplica a transformação inicial para posicionar o objeto
             novoObjeto->aplicarTransformacao(matTranslacao);
         }
         // --- FIM DO PASSO 2 ---
 
+        // 1. Adiciona o objeto ao modelo de dados.
         displayFile->adicionarObjeto(novoObjeto);
-        atualizarCbDisplayFile();
-        focarNoObjeto(novoObjeto); // A função de foco agora enquadrará o objeto em sua nova posição
-        ui->frameDesenho->redesenhar();
 
+        // 2. Atualiza o ComboBox para listar o novo objeto.
+        atualizarCbDisplayFile();
+
+        // 3. Define o estado manualmente, sem depender de sinais.
+        //    Isso garante que o ponteiro e o alvo da transformação estejam corretos.
+        objetoSelecionado = novoObjeto;
+        ui->rbTransformarObjeto->setChecked(true);
+
+        // 4. Apenas atualiza a APARÊNCIA do ComboBox, bloqueando os sinais
+        //    para garantir que a função de seleção não seja chamada desnecessariamente.
         int idx = ui->cbDisplayFile->findData(QVariant::fromValue(novoObjeto->obterNome()));
         if (idx != -1) {
+            ui->cbDisplayFile->blockSignals(true);
             ui->cbDisplayFile->setCurrentIndex(idx);
+            ui->cbDisplayFile->blockSignals(false);
         }
+
+        // 5. Atualiza o estado geral da UI e executa ações secundárias.
+        updateTransformationTargetUIState();
+        focarNoObjeto(novoObjeto);
+        ui->frameDesenho->redesenhar();
+
         QMessageBox::information(this, "Sucesso", "Objeto '" + novoObjeto->obterNome() + "' carregado na posição (" + QString::number(x) + ", " + QString::number(y) + ", " + QString::number(z) + ").");
     } else {
         QMessageBox::warning(this, "Erro de Carregamento", "Não foi possível carregar o arquivo .obj selecionado.");
-    }
-}
-
-void MainWindow::on_btnModificarForma_clicked()
-{
-    // A lógica para modificar uma forma pode ser complexa.
-    // Por enquanto, uma mensagem resolve o erro de link-edição.
-    if (objetoSelecionado) {
-        QMessageBox::information(this, "Modificar Forma", "Funcionalidade de modificar ainda não implementada.");
-    } else {
-        QMessageBox::warning(this, "Modificar Forma", "Nenhum objeto selecionado para modificar.");
     }
 }
 
@@ -473,8 +501,6 @@ void MainWindow::on_btnExcluirForma_clicked()
     }
 }
 
-
-// Em mainwindow.cpp
 void MainWindow::focarNoObjeto(std::shared_ptr<ObjetoGrafico> objeto) {
     if (!objeto || !displayFile || !displayFile->obterCameraAtiva()) {
         return;
