@@ -23,7 +23,7 @@ public:
     void definirRaioOriginal(double novoRaio);
     void definirNormal(const Ponto3D& novaNormal);
 
-    QList<Ponto3D> casteljau(QList<Ponto3D> controlPoints, QList<Ponto3D> allMidpoints);
+    QList<Ponto3D> casteljau(QList<Ponto3D> pontosControle, QList<Ponto3D> pontosIntermediarios);
 
     // --- MÉTODOS VIRTUAIS OBRIGATÓRIOS HERDADOS ---
 
