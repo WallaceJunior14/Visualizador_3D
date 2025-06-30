@@ -5,9 +5,6 @@
 #include <QPainter>
 #include <QRect>
 
-// Implementação simples de um clipper para o exemplo.
-// No seu código, você já tem uma instância no FrameDesenho.
-// Esta implementação é apenas para garantir que o código compile de forma isolada.
 Clipper3D clipper(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0);
 
 MalhaObj::MalhaObj(const QString& nome, const QList<Ponto3D>& vertices, const QList<QPair<int, int>>& arestas)

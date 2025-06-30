@@ -31,11 +31,6 @@ void ObjetoGrafico::aplicarTransformacao(const Matriz& transformacao) {
 
 // --- MÉTODOS VIRTUAIS COM IMPLEMENTAÇÃO PADRÃO ---
 
-/**
- * @brief Implementação padrão para recalcular pontos.
- * Esta função é tão genérica que TODAS as suas classes filhas podem usá-la
- * sem precisar de uma implementação própria.
- */
 void ObjetoGrafico::recalcularPontos(const Camera& camera) { // <-- ALTERADO: Assinatura da função
     pontosClip.clear();
 
@@ -55,10 +50,6 @@ void ObjetoGrafico::recalcularPontos(const Camera& camera) { // <-- ALTERADO: As
     }
 }
 
-/**
- * @brief Implementação padrão para calcular o centro geométrico.
- * Funciona bem para polígonos e nuvens de pontos.
- */
 Ponto3D ObjetoGrafico::calcularCentroGeometrico() const {
     if (pontosOriginaisMundo.isEmpty()) {
         return Ponto3D(0, 0, 0);

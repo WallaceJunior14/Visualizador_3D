@@ -97,13 +97,7 @@ void DisplayFile::recalcularTodosOsPontos() {
     }
 }
 
-/**
- * @brief Conta quantos objetos de um determinado tipo existem no DisplayFile.
- * @param tipo O TipoObjeto a ser contado (PONTO, RETA, POLIGONO, etc.).
- * @param numVerticesEspecifico Se o tipo for POLIGONO e este valor for > 0,
- * conta apenas os polígonos com este número exato de vértices (ex: 3 para triângulos).
- * @return O número de objetos encontrados que correspondem aos critérios.
- */
+
 int DisplayFile::contarObjetosPorTipo(TipoObjeto tipo, int numVerticesEspecifico) const
 {
     // 1. Inicializa o contador.

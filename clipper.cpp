@@ -89,8 +89,7 @@ bool Clipper3D::cliparReta(Ponto3D& p1, Ponto3D& p2) {
                 break;
             }
 
-            // Atualiza o ponto que estava fora com o novo ponto de interseção
-            // e recalcula seu código de região para o próximo loop.
+            // Atualiza o ponto que estava fora com o novo ponto de interseção e recalcula seu código de região para o próximo loop.
             if (codigoFora == codigo1) {
                 p1.definirX(x); p1.definirY(y); p1.definirZ(z);
                 codigo1 = calcularCodigoRegiao(p1);

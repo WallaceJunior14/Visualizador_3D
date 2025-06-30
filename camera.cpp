@@ -24,7 +24,7 @@ Ponto3D Camera::obterPosicao() const { return posicao; }
 Ponto3D Camera::obterAlvo() const { return alvo; }
 Ponto3D Camera::obterVetorUp() const { return vetorUp; }
 
-// --- Projection ---
+// --- Projecão ---
 void Camera::definirTipoProjecao(TipoProjecao tipo) { tipoProjecao = tipo; }
 TipoProjecao Camera::obterTipoProjecao() const { return tipoProjecao; }
 

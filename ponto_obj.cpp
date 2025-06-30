@@ -12,10 +12,6 @@ PontoObj::PontoObj(const QString& nome, const Ponto3D& coordenada, const QColor&
 
 // --- IMPLEMENTAÇÃO DOS MÉTODOS VIRTUAIS ---
 
-/**
- * @brief Implementação corrigida da função 'desenhar'.
- * Mapeia a coordenada NDC do ponto para a viewport e desenha um ponto.
- */
 void PontoObj::desenhar(QPainter* painter, const QRect& viewport) const {
     if (pontosClip.isEmpty()) {
         return;
@@ -35,10 +31,6 @@ void PontoObj::desenhar(QPainter* painter, const QRect& viewport) const {
     painter->drawPoint(ponto_tela);
 }
 
-/**
- * @brief Implementação otimizada da Bounding Box para um ponto.
- * (Nenhuma alteração necessária)
- */
 BoundingBox PontoObj::obterBBox() const {
     if (obterPontosOriginaisMundo().isEmpty()) {
         return BoundingBox(); // BBox inválida
@@ -48,19 +40,10 @@ BoundingBox PontoObj::obterBBox() const {
     return BoundingBox(pontoTransformado);
 }
 
-/**
- * @brief Implementação otimizada do centro geométrico para um ponto.
- * (Nenhuma alteração necessária)
- */
 Ponto3D PontoObj::calcularCentroGeometrico() const {
     // O centro geométrico de um ponto é o próprio ponto.
     return obterCoordenada();
 }
-
-
-// <-- REMOVIDO: A implementação de PontoObj::recalcularPontos foi deletada.
-// A classe agora herda e utiliza a implementação de ObjetoGrafico::recalcularPontos(const Camera&).
-
 
 // Métodos específicos do Ponto (sem alterações)
 void PontoObj::definirCoordenada(const Ponto3D& coordenada) {

@@ -24,10 +24,6 @@ const QList<Ponto3D>& PoligonoObj::obterVertices() const {
 
 // --- IMPLEMENTAÇÕES DOS MÉTODOS VIRTUAIS ---
 
-/**
- * @brief Implementação corrigida da função 'desenhar'.
- * Mapeia diretamente os pontos de NDC [-1, 1] para as coordenadas do QRect da viewport.
- */
 void PoligonoObj::desenhar(QPainter* painter, const QRect& viewport) const {
     if (pontosClip.size() < 2) {
         return;
@@ -62,10 +58,6 @@ void PoligonoObj::desenhar(QPainter* painter, const QRect& viewport) const {
     }
 }
 
-/**
- * @brief Implementação da função 'obterBBox'.
- * (Esta função não precisou de alterações, pois já estava correta)
- */
 BoundingBox PoligonoObj::obterBBox() const {
     if (obterPontosOriginaisMundo().isEmpty()) {
         return BoundingBox();
@@ -82,7 +74,3 @@ BoundingBox PoligonoObj::obterBBox() const {
 
     return bbox;
 }
-
-
-// <-- REMOVIDO: A implementação de PoligonoObj::recalcularPontos foi deletada.
-// A classe agora herda e utiliza a implementação de ObjetoGrafico::recalcularPontos(const Camera&).

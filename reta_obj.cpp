@@ -1,6 +1,6 @@
 #include "reta_obj.h"
 #include "bounding_box.h"
-#include <QRect>    // <-- ADICIONADO: Inclui a definição de QRect
+#include <QRect>
 #include <QDebug>   // Para qWarning
 
 RetaObj::RetaObj(const QString& nome, const Ponto3D& p1, const Ponto3D& p2, const QColor& corReta)
@@ -13,10 +13,6 @@ RetaObj::RetaObj(const QString& nome, const Ponto3D& p1, const Ponto3D& p2, cons
 
 // --- IMPLEMENTAÇÃO DOS MÉTODOS VIRTUAIS ---
 
-/**
- * @brief Implementação corrigida e robusta da função 'desenhar'.
- * Usa o QRect passado como parâmetro para mapear corretamente os pontos de NDC para a tela.
- */
 void RetaObj::desenhar(QPainter* painter, const QRect& viewport) const {
     if (pontosClip.size() != 2) {
         return;
@@ -41,10 +37,6 @@ void RetaObj::desenhar(QPainter* painter, const QRect& viewport) const {
     painter->drawLine(p1_tela, p2_tela);
 }
 
-/**
- * @brief Implementação da função 'obterBBox'.
- * (Nenhuma alteração necessária, já estava correta)
- */
 BoundingBox RetaObj::obterBBox() const {
     if (obterPontosOriginaisMundo().size() != 2) {
         return BoundingBox();
@@ -57,10 +49,7 @@ BoundingBox RetaObj::obterBBox() const {
     return BoundingBox(p1_transformado, p2_transformado);
 }
 
-/**
- * @brief Implementação otimizada para o centro geométrico de uma reta.
- * (Nenhuma alteração necessária, já estava correta)
- */
+
 Ponto3D RetaObj::calcularCentroGeometrico() const {
     if (obterPontosOriginaisMundo().size() == 2) {
         const Ponto3D& p1 = obterPontosOriginaisMundo().at(0);
@@ -92,6 +81,3 @@ Ponto3D RetaObj::obterPonto2() const {
     qWarning("RetaObj::obterPonto2() chamado em uma Reta sem ponto 2.");
     return Ponto3D();
 }
-
-// <-- REMOVIDO: A implementação de RetaObj::recalcularPontos foi deletada.
-// A classe agora herda e utiliza a implementação de ObjetoGrafico::recalcularPontos(const Camera&).
