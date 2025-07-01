@@ -97,7 +97,14 @@ private:
      * @param matViewProj A matriz combinada de View-Projeção para transformar os eixos.
      * @param matViewport A matriz da viewport para mapear os eixos para a tela.
      */
-    void desenharEixosCoordenadas(QPainter& painter, const Matriz& matViewProj, const Matriz& matViewport);
+    //void desenharEixosCoordenadas(QPainter& painter, const Matriz& matViewProj, const Matriz& matViewport);
+
+    /**
+     * @brief Desenha um indicador de eixos fixo em um canto da tela (HUD).
+     * Este indicador rotaciona para mostrar a orientação atual do mundo, mas
+     * sua posição na tela é fixa.
+     */
+    void desenharIndicadorDeEixos(QPainter& painter);
 };
 
 #endif // FRAME_DESENHO_H

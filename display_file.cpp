@@ -3,14 +3,8 @@
 #include <QDebug>
 
 DisplayFile::DisplayFile() {
-    // Cria uma câmera padrão ao inicializar
-    auto cameraDefault = std::make_shared<Camera>(
-        Ponto3D(0, 0, 20),      // Forneça uma posição inicial válida
-        Ponto3D(0, 0, 0),       // Forneça um alvo inicial válido
-        "Câmera Principal"        // O nome que já estava lá
-        );
-    adicionarCamera(cameraDefault);
-    definirCameraAtiva(cameraDefault);
+
+
 }
 
 void DisplayFile::adicionarObjeto(std::shared_ptr<ObjetoGrafico> obj) {

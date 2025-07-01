@@ -8,7 +8,7 @@
 Camera::Camera(const Ponto3D& pos, const Ponto3D& target, const QString& nome)
     : posicao(pos), alvo(target), nome(nome) {
     // Padrões de uma câmera em perspectiva razoável
-    posicao = Ponto3D(0, 0, 500); // Posição um pouco afastada na direção Z
+    posicao = Ponto3D(0, 0, 30); // Posição um pouco afastada na direção Z
     alvo = Ponto3D(0, 0, 0);       // Olhando para a origem
     vetorUp = Ponto3D(0, 1, 0);    // Eixo Y é para cima
 
@@ -92,9 +92,6 @@ void Camera::dolly(double fator)
     Ponto3D vetorDirecao = this->alvo - this->posicao;
 
     // 2. Normaliza o vetor (transforma em um vetor de comprimento 1).
-    // Isso garante que o movimento seja proporcional ao 'fator',
-    // independentemente da distância atual até o alvo.
-    // (Supondo que você tenha um método para normalizar em Ponto3D)
     vetorDirecao.normalizarVetor();
 
     // 3. Calcula o vetor de deslocamento multiplicando a direção pelo fator.
@@ -105,33 +102,44 @@ void Camera::dolly(double fator)
     this->posicao = this->posicao + deslocamento;
 }
 
-void Camera::orbitar(double deltaYaw, double deltaPitch)
+// Em camera.cpp
+
+void Camera::orbitar(double deltaYaw, double deltaPitch, double deltaRoll)
 {
-    // 1. Obtenha o vetor que vai do alvo até a posição atual da câmera.
-    // É este vetor que vamos rotacionar.
-    Ponto3D vetorCamera = this->posicao - this->alvo;
+    // Vetor que vai da posição da câmera até o alvo (direção da visão)
+    Ponto3D vetorDirecao = (this->alvo - this->posicao).normalizarVetor();
+    // Vetor que vai do alvo até a posição da câmera (usado para rotação)
+    Ponto3D vetorPosicaoRelativa = this->posicao - this->alvo;
 
-    // 2. Crie a matriz de rotação para o Yaw (rotação horizontal).
-    // Esta rotação acontece em torno do eixo Y do mundo.
-    Matriz rotYaw = TransformadorGeometrico::rotacaoY(deltaYaw);
+    // --- 1. Rotação Pitch (Eixo X local) ---
+    // O eixo de rotação Pitch é o eixo "direito" da câmera.
+    // Calculamos com o produto vetorial entre a direção e o vetor UP da câmera.
+    Ponto3D eixoPitch = Ponto3D::produtoVetorial(vetorDirecao, this->vetorUp).normalizarVetor();
+    // Previne instabilidade se o eixo for inválido (câmera olhando para cima/baixo)
+    if (eixoPitch.magnitude() > 0.001) {
+        Matriz rotPitch = Matriz::rotacaoEixoArbitrario(eixoPitch, deltaPitch);
+        vetorPosicaoRelativa = rotPitch * vetorPosicaoRelativa;
+        // Também rotacionamos o vetor UP para que ele acompanhe o movimento
+        this->vetorUp = rotPitch * this->vetorUp;
+    }
 
-    // 3. Aplique a rotação de Yaw ao vetor da câmera.
-    vetorCamera = rotYaw * vetorCamera;
+    // --- 2. Rotação Yaw (Eixo Y do Mundo) ---
+    // A rotação Yaw geralmente é mais intuitiva em torno do eixo Y global.
+    Matriz rotYaw = Matriz::rotacaoY(deltaYaw);
+    vetorPosicaoRelativa = rotYaw * vetorPosicaoRelativa;
+    this->vetorUp = rotYaw * this->vetorUp;
 
-    // 4. Calcule o eixo para o Pitch (rotação vertical).
-    // Este eixo é um vetor que aponta para a "direita" da câmera.
-    // Ele é calculado com o produto vetorial entre o vetor 'up' do mundo e o vetor da câmera.
-    Ponto3D upMundo(0.0, 1.0, 0.0);
-    Ponto3D eixoPitch = Ponto3D::produtoVetorial(upMundo, vetorCamera);
-    eixoPitch.normalizarVetor(); // É crucial normalizar o eixo de rotação
+    // --- 3. Rotação Roll (Eixo Z local) ---
+    // A rotação Roll gira o vetor UP da câmera em torno da direção da visão.
+    // O eixo de rotação é o próprio vetor de direção.
+    if (abs(deltaRoll) > 0.001) {
+        Matriz rotRoll = Matriz::rotacaoEixoArbitrario(vetorDirecao, deltaRoll);
+        this->vetorUp = rotRoll * this->vetorUp;
+    }
 
-    // 5. Crie a matriz de rotação para o Pitch em torno do eixo calculado.
-    // (Supondo que você tenha uma função para rotacionar em torno de um eixo arbitrário)
-    Matriz rotPitch = TransformadorGeometrico::rotacaoEixoArbitrario(eixoPitch, deltaPitch);
+    // Normaliza o vetor UP para evitar acúmulo de erros de ponto flutuante
+    this->vetorUp.normalizarVetor();
 
-    // 6. Aplique a rotação de Pitch ao vetor da câmera.
-    vetorCamera = rotPitch * vetorCamera;
-
-    // 7. A nova posição da câmera é o ponto 'alvo' mais o vetor rotacionado.
-    this->posicao = this->alvo + vetorCamera;
+    // 4. Atualiza a posição final da câmera
+    this->posicao = this->alvo + vetorPosicaoRelativa;
 }

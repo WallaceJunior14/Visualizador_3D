@@ -65,8 +65,6 @@ void FrameDesenho::redesenhar() {
     update();
 }
 
-
-
 void FrameDesenho::paintEvent(QPaintEvent *event) {
     QFrame::paintEvent(event);
     QPainter painter(this);
@@ -79,27 +77,25 @@ void FrameDesenho::paintEvent(QPaintEvent *event) {
     }
 
     // --- CORAÇÃO DO PIPELINE 3D ---
-    // 1. Recalcula todos os pontos, aplicando o pipeline MVP (Model-View-Projection)
     displayFile->recalcularTodosOsPontos();
 
-    // 2. Obtém as matrizes essenciais uma única vez
-    Matriz matView = cameraAtiva->obterMatrizView();
-    Matriz matProj = cameraAtiva->obterMatrizProjecao();
-    Matriz matViewProj = matProj * matView; // Matriz combinada para eixos e labels
+    // Matriz da viewport é a única que precisamos aqui fora do loop
     Matriz matViewport = viewportTela->obterMatrizTransformacaoViewport();
 
-    // 3. NOVO: Desenha os eixos de coordenadas do mundo
-    desenharEixosCoordenadas(painter, matViewProj, matViewport);
-
-    // 4. Desenha cada objeto do DisplayFile
+    // Desenha cada objeto do DisplayFile
     for (const auto& objeto : displayFile->obterObjetos()) {
         if (objeto) {
+            // A antiga função desenharObjeto ainda funciona perfeitamente
             desenharObjeto(painter, objeto, matViewport);
         }
     }
 
-    // 5. Desenha a borda da viewport e a nova legenda
+    // --- DESENHO DOS ELEMENTOS DE UI (OVERLAY) ---
     desenharDetalhesDaViewport(painter);
+
+    desenharIndicadorDeEixos(painter);
+
+    // A chamada para a antiga função foi removida.
 }
 
 void FrameDesenho::resizeEvent(QResizeEvent *event) {
@@ -203,76 +199,131 @@ void FrameDesenho::desenharDetalhesDaViewport(QPainter& painter) {
     painter.restore(); // Restaura o estado do painter
 }
 
-void FrameDesenho::desenharEixosCoordenadas(QPainter& painter, const Matriz& matViewProj, const Matriz& matViewport)
-{
-    const double tamanhoEixo = 10000.0;
-    const double distanciaLabel = 60.0; // Distância 3D da origem para posicionar as labels X e Y
+// void FrameDesenho::desenharEixosCoordenadas(QPainter& painter, const Matriz& matViewProj, const Matriz& matViewport)
+// {
+//     const double tamanhoEixo = 10000.0;
+//     const double distanciaLabel = 60.0; // Distância 3D da origem para posicionar as labels X e Y
 
-    struct Eixo {
-        Ponto3D direcao;
+//     struct Eixo {
+//         Ponto3D direcao;
+//         QString label;
+//     };
+
+//     Eixo eixos[3] = {
+//         { {1, 0, 0}, "Eixo X" },
+//         { {0, 1, 0}, "Eixo Y" },
+//         { {0, 0, 1}, "Eixo Z" }
+//     };
+
+//     QPen penEixo(Qt::gray, 1, Qt::DotLine);
+//     painter.setFont(QFont("Arial", 9));
+
+//     for (const auto& eixo : eixos) {
+//         // --- 1. Projeta e desenha o eixo ---
+//         Ponto3D p0_mundo = eixo.direcao * -tamanhoEixo;
+//         Ponto3D p1_mundo = eixo.direcao * tamanhoEixo;
+
+//         Ponto3D p0_ndc = matViewProj * p0_mundo;
+//         Ponto3D p1_ndc = matViewProj * p1_mundo;
+//         p0_ndc.normalizar();
+//         p1_ndc.normalizar();
+
+//         if (clipper->cliparReta(p0_ndc, p1_ndc)) {
+//             double p0_tela_x = matViewport(0,0) * p0_ndc.obterX() + matViewport(0,2);
+//             double p0_tela_y = matViewport(1,1) * p0_ndc.obterY() + matViewport(1,2);
+//             double p1_tela_x = matViewport(0,0) * p1_ndc.obterX() + matViewport(0,2);
+//             double p1_tela_y = matViewport(1,1) * p1_ndc.obterY() + matViewport(1,2);
+
+//             QPoint p0_tela(qRound(p0_tela_x), qRound(p0_tela_y));
+//             QPoint p1_tela(qRound(p1_tela_x), qRound(p1_tela_y));
+
+//             painter.setPen(penEixo);
+//             painter.drawLine(p0_tela, p1_tela);
+
+//             // --- 2. Desenha a legenda ---
+//             painter.setPen(Qt::gray);
+
+//             // Posição da label em 3D, próximo à extremidade positiva do eixo
+//             Ponto3D label_mundo;
+
+//             if (eixo.label == "Eixo Z") {
+//                 // Para o Z, calcula o ponto 3D central no eixo
+//                 label_mundo = eixo.direcao * (tamanhoEixo * 0.5);
+//             } else {
+//                 // Para X e Y, calcula uma posição mais próxima da extremidade positiva
+//                 label_mundo = eixo.direcao * distanciaLabel;
+//             }
+
+//             Ponto3D label_ndc = matViewProj * label_mundo;
+//             label_ndc.normalizar();
+
+//             if (clipper->calcularCodigoRegiao(label_ndc) == Clipper3D::DENTRO) {
+//                 double tela_x = matViewport(0,0) * label_ndc.obterX() + matViewport(0,2);
+//                 double tela_y = matViewport(1,1) * label_ndc.obterY() + matViewport(1,2);
+
+//                 int deslocX = 0;
+//                 int deslocY = -8;
+
+//                 if (eixo.label == "Eixo X") deslocX = 6;
+//                 if (eixo.label == "Eixo Z") deslocY = 6;
+
+//                 painter.drawText(QPointF(tela_x + deslocX, tela_y + deslocY), eixo.label);
+//             }
+//         }
+//     }
+// }
+
+void FrameDesenho::desenharIndicadorDeEixos(QPainter& painter)
+{
+    auto camera = obterCameraAtiva();
+    if (!camera) return;
+
+    // --- 1. Isolar apenas a ROTAÇÃO da câmera ---
+    // Criamos uma matriz de visualização que ignora a posição da câmera,
+    // tratando-a como se estivesse na origem, mas mantendo sua orientação.
+    Matriz matRotacaoCamera = Matriz::lookAt(
+        Ponto3D(0, 0, 0),                         // Câmera na origem
+        (camera->obterAlvo() - camera->obterPosicao()), // Olhando na mesma direção de antes
+        camera->obterVetorUp()                    // Com a mesma orientação "para cima"
+        );
+
+    // --- 2. Definir parâmetros do indicador na tela ---
+    const int tamanhoEixoTela = 40; // Comprimento de cada eixo em pixels
+    const int margem = 25;
+    // Posição fixa no canto inferior esquerdo
+    const QPoint origemTela(margem, height() - margem);
+
+    struct EixoInfo {
+        Ponto3D direcaoMundo;
+        QColor cor;
         QString label;
     };
 
-    Eixo eixos[3] = {
-        { {1, 0, 0}, "Eixo X" },
-        { {0, 1, 0}, "Eixo Y" },
-        { {0, 0, 1}, "Eixo Z" }
+    const EixoInfo eixos[3] = {
+        { {1, 0, 0}, Qt::red,   "X" },
+        { {0, 1, 0}, Qt::green, "Y" },
+        { {0, 0, 1}, Qt::blue,  "Z" }
     };
 
-    QPen penEixo(Qt::gray, 1, Qt::DotLine);
-    painter.setFont(QFont("Arial", 9));
+    painter.save(); // Salva estado atual do painter
+    painter.setFont(QFont("Arial", 9, QFont::Bold));
 
+    // --- 3. Desenhar cada um dos três eixos ---
     for (const auto& eixo : eixos) {
-        // --- 1. Projeta e desenha o eixo ---
-        Ponto3D p0_mundo = eixo.direcao * -tamanhoEixo;
-        Ponto3D p1_mundo = eixo.direcao * tamanhoEixo;
+        // Rotaciona a direção do eixo do mundo (ex: (1,0,0)) para o espaço da câmera
+        Ponto3D dirRotacionada = matRotacaoCamera * eixo.direcaoMundo;
 
-        Ponto3D p0_ndc = matViewProj * p0_mundo;
-        Ponto3D p1_ndc = matViewProj * p1_mundo;
-        p0_ndc.normalizar();
-        p1_ndc.normalizar();
+        // Projeta o vetor 3D rotacionado em um ponto 2D na tela
+        QPointF p_final(
+            origemTela.x() + dirRotacionada.obterX() * tamanhoEixoTela,
+            origemTela.y() - dirRotacionada.obterY() * tamanhoEixoTela // Y é invertido no sistema de tela do Qt
+            );
 
-        if (clipper->cliparReta(p0_ndc, p1_ndc)) {
-            double p0_tela_x = matViewport(0,0) * p0_ndc.obterX() + matViewport(0,2);
-            double p0_tela_y = matViewport(1,1) * p0_ndc.obterY() + matViewport(1,2);
-            double p1_tela_x = matViewport(0,0) * p1_ndc.obterX() + matViewport(0,2);
-            double p1_tela_y = matViewport(1,1) * p1_ndc.obterY() + matViewport(1,2);
-
-            QPoint p0_tela(qRound(p0_tela_x), qRound(p0_tela_y));
-            QPoint p1_tela(qRound(p1_tela_x), qRound(p1_tela_y));
-
-            painter.setPen(penEixo);
-            painter.drawLine(p0_tela, p1_tela);
-
-            // --- 2. Desenha a legenda ---
-            painter.setPen(Qt::gray);
-
-            // Posição da label em 3D, próximo à extremidade positiva do eixo
-            Ponto3D label_mundo;
-
-            if (eixo.label == "Eixo Z") {
-                // Para o Z, calcula o ponto 3D central no eixo
-                label_mundo = eixo.direcao * (tamanhoEixo * 0.5);
-            } else {
-                // Para X e Y, calcula uma posição mais próxima da extremidade positiva
-                label_mundo = eixo.direcao * distanciaLabel;
-            }
-
-            Ponto3D label_ndc = matViewProj * label_mundo;
-            label_ndc.normalizar();
-
-            if (clipper->calcularCodigoRegiao(label_ndc) == Clipper3D::DENTRO) {
-                double tela_x = matViewport(0,0) * label_ndc.obterX() + matViewport(0,2);
-                double tela_y = matViewport(1,1) * label_ndc.obterY() + matViewport(1,2);
-
-                int deslocX = 0;
-                int deslocY = -8;
-
-                if (eixo.label == "Eixo X") deslocX = 6;
-                if (eixo.label == "Eixo Z") deslocY = 6;
-
-                painter.drawText(QPointF(tela_x + deslocX, tela_y + deslocY), eixo.label);
-            }
-        }
+        // Desenha a linha e a legenda do eixo
+        painter.setPen(QPen(eixo.cor, 2));
+        painter.drawLine(origemTela, p_final.toPoint());
+        painter.drawText(p_final + QPointF(3, 3), eixo.label);
     }
+
+    painter.restore(); // Restaura o estado do painter
 }

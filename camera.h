@@ -148,11 +148,12 @@ public:
     void dolly(double fator);
 
     /**
-     * @brief Rotaciona a posição da câmera em torno do ponto de alvo.
-     * @param deltaYaw Rotação horizontal (em torno do eixo Y do mundo), em graus.
-     * @param deltaPitch Rotação vertical (em torno do eixo lateral da câmera), em graus.
+     * @brief Rotaciona a posição da câmera em torno do ponto de alvo e sua orientação.
+     * @param deltaYaw Rotação horizontal (em torno do eixo Y), em graus.
+     * @param deltaPitch Rotação vertical (em torno do eixo X da câmera), em graus.
+     * @param deltaRoll Rotação de inclinação (em torno do eixo Z da câmera), em graus.
      */
-    void orbitar(double deltaYaw, double deltaPitch);
+    void orbitar(double deltaYaw, double deltaPitch, double deltaRoll);
 
 
 private:

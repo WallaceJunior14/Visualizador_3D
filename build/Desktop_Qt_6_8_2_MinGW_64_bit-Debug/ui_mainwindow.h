@@ -23,6 +23,7 @@
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
+
 QT_BEGIN_NAMESPACE
 
 class Ui_MainWindow
@@ -108,7 +109,7 @@ public:
         tabTranslacao->setObjectName("tabTranslacao");
         layoutWidget_2 = new QWidget(tabTranslacao);
         layoutWidget_2->setObjectName("layoutWidget_2");
-        layoutWidget_2->setGeometry(QRect(10, 20, 210, 141));
+        layoutWidget_2->setGeometry(QRect(10, 20, 210, 150));
         verticalLayout_2 = new QVBoxLayout(layoutWidget_2);
         verticalLayout_2->setObjectName("verticalLayout_2");
         verticalLayout_2->setContentsMargins(0, 0, 0, 0);
@@ -165,7 +166,7 @@ public:
         tabEscala->setObjectName("tabEscala");
         layoutWidget_4 = new QWidget(tabEscala);
         layoutWidget_4->setObjectName("layoutWidget_4");
-        layoutWidget_4->setGeometry(QRect(10, 47, 201, 114));
+        layoutWidget_4->setGeometry(QRect(10, 47, 201, 121));
         gridLayout_4 = new QGridLayout(layoutWidget_4);
         gridLayout_4->setObjectName("gridLayout_4");
         gridLayout_4->setContentsMargins(0, 0, 0, 0);
@@ -267,7 +268,7 @@ public:
         tab->setObjectName("tab");
         layoutWidget = new QWidget(tab);
         layoutWidget->setObjectName("layoutWidget");
-        layoutWidget->setGeometry(QRect(10, 20, 201, 145));
+        layoutWidget->setGeometry(QRect(10, 20, 201, 154));
         verticalLayout_8 = new QVBoxLayout(layoutWidget);
         verticalLayout_8->setObjectName("verticalLayout_8");
         verticalLayout_8->setContentsMargins(0, 0, 0, 0);
@@ -342,7 +343,7 @@ public:
         btnLimparSelecao->setGeometry(QRect(930, 680, 111, 27));
         layoutWidget1 = new QWidget(centralwidget);
         layoutWidget1->setObjectName("layoutWidget1");
-        layoutWidget1->setGeometry(QRect(20, 290, 231, 58));
+        layoutWidget1->setGeometry(QRect(20, 290, 231, 61));
         verticalLayout_3 = new QVBoxLayout(layoutWidget1);
         verticalLayout_3->setObjectName("verticalLayout_3");
         verticalLayout_3->setContentsMargins(0, 0, 0, 0);

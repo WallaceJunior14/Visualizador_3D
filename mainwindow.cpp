@@ -20,6 +20,7 @@
 #include <QFileDialog>
 #include <QInputDialog>
 
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -121,14 +122,13 @@ void MainWindow::resetarControlesTransformacao() {
 void MainWindow::popularDisplayFileInicial()
 {
     if (displayFile) {
-        // Cria uma câmera padrão
-        auto cameraPadrao = std::make_shared<Camera>(
-            Ponto3D(0, 5, 15),
-            Ponto3D(0, 0, 0),
-            "Câmera Padrão"
+        auto cameraFrontal = std::make_shared<Camera>(
+            Ponto3D(0, 10, 20),  // Posição mais próxima: Z=20 e um pouco acima
+            Ponto3D(0, 0, 0),   // Olhando para a origem
+            "Câmera Frontal"
             );
-        displayFile->adicionarCamera(cameraPadrao);
-        displayFile->definirCameraAtiva(cameraPadrao);
+        displayFile->adicionarCamera(cameraFrontal);
+        displayFile->definirCameraAtiva(cameraFrontal);
     }
 }
 
@@ -324,7 +324,7 @@ void MainWindow::aplicarRotacaoAtual() {
         objetoSelecionado->aplicarTransformacao(R);
 
     } else if (ui->rbTransformarCamera->isChecked() && camera) {
-        camera->orbitar(anguloY, anguloX);
+        camera->orbitar(anguloY, anguloX, anguloZ);
     }
 
     ui->frameDesenho->redesenhar();
@@ -459,7 +459,20 @@ void MainWindow::on_btnCarregarOBJ_clicked()
 
         // 5. Atualiza o estado geral da UI e executa ações secundárias.
         updateTransformationTargetUIState();
-        focarNoObjeto(novoObjeto);
+
+        QMessageBox::information(this, "Sucesso", "Objeto '" + novoObjeto->obterNome() + "' carregado.");
+
+        QMessageBox::StandardButton resposta = QMessageBox::question(
+            this,
+            "Focar no Objeto?",
+            "Deseja ajustar a câmera para focar no objeto recém-carregado?",
+            QMessageBox::Yes | QMessageBox::No
+            );
+
+        if (resposta == QMessageBox::Yes) {
+            focarNoObjeto(novoObjeto); // Só foca se o usuário clicar em "Sim"
+        }
+
         ui->frameDesenho->redesenhar();
 
         QMessageBox::information(this, "Sucesso", "Objeto '" + novoObjeto->obterNome() + "' carregado na posição (" + QString::number(x) + ", " + QString::number(y) + ", " + QString::number(z) + ").");
@@ -500,6 +513,7 @@ void MainWindow::on_btnExcluirForma_clicked()
         ui->frameDesenho->redesenhar();
     }
 }
+
 
 void MainWindow::focarNoObjeto(std::shared_ptr<ObjetoGrafico> objeto) {
     if (!objeto || !displayFile || !displayFile->obterCameraAtiva()) {
